@@ -25,6 +25,7 @@ cp .env.example .env
 | `NUXT_DATABASE_PATH` | SQLite file path (Docker uses `/data/fitness.db`) |
 | `PORT` | Port to listen on (default `3000`) |
 | `NUXT_SESSION_COOKIE_SECURE` | Set to `false` **only** for local HTTP testing. Leave unset when hosted. |
+| `NUXT_TRUSTED_PROXY` | How to identify clients for the login lockout: unset/`none` (direct connection, default), `cloudflare` (behind Cloudflare / Cloudflare Tunnel, uses `CF-Connecting-IP`), `generic` (behind one reverse proxy such as Railway, uses the last `X-Forwarded-For` entry). Only set it when that proxy really is in front; otherwise clients could forge the header. |
 
 Generate a secret with:
 

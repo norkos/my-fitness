@@ -40,7 +40,18 @@ describe('readServerConfig', () => {
       username: 'me',
       password: 'super-secret-password',
       databasePath: '/data/fitness.db',
+      trustedProxy: 'none',
     })
+  })
+
+  it('reads the trusted proxy mode, case-insensitively', () => {
+    expect(readServerConfig({ ...valid, NUXT_TRUSTED_PROXY: 'Cloudflare' }).trustedProxy).toBe('cloudflare')
+    expect(readServerConfig({ ...valid, NUXT_TRUSTED_PROXY: '' }).trustedProxy).toBe('none')
+  })
+
+  it('rejects an unknown trusted proxy mode', () => {
+    expect(findConfigProblems({ ...valid, NUXT_TRUSTED_PROXY: 'everything' }))
+      .toEqual(['NUXT_TRUSTED_PROXY must be one of: none, cloudflare, generic'])
   })
 
   it('defaults the database path', () => {

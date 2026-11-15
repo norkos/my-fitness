@@ -13,7 +13,7 @@
 - [x] 2.2 Write `compose.yaml` (app service, `.env`, port 3000, `./data:/data`, `NUXT_SESSION_COOKIE_SECURE=false`) and a test service using the build target for unit/API tests; verify `docker compose up --build` serves the placeholder page at http://localhost:3000
 - [x] 2.3 Configure Vitest with two projects (unit, API via a helper that boots the built server per test file) and v8 coverage thresholds of 80% for lines/branches/functions/statements on `server/**` and `shared/**`; add one trivial unit test and one API test hitting the running app; verify `docker compose run --rm test` passes and prints a coverage report
 - [x] 2.4 Configure Playwright (Chromium, 360x780 viewport, `data-testid` convention, retries 1 in CI) and `compose.test.yaml` (app with dummy credentials and tmpfs DB + Playwright container); add one smoke test that loads the app; verify `docker compose -f compose.test.yaml up --build --abort-on-container-exit --exit-code-from e2e` exits 0
-- [ ] 2.5 Add GitHub Actions workflow (jobs `unit-api` and `e2e`, npm cache, concurrency cancel-in-progress, coverage and Playwright report artifacts with 7-day retention); verify a push shows both jobs green
+- [x] 2.5 Add GitHub Actions workflow (jobs `unit-api` and `e2e`, npm cache, concurrency cancel-in-progress, coverage and Playwright report artifacts with 7-day retention); verify a push shows both jobs green
 - [x] 2.6 Write `README.md` sections for running locally, running each test layer in Docker, environment variables and testing from a phone on the LAN (incl. Windows Firewall note); verify each documented command runs as written
 
 ## 3. Runtime configuration and database
@@ -29,6 +29,7 @@
 - [x] 4.1 Implement `POST /api/auth/login` (constant-time compare against configured credentials, generic error for wrong user or password, failed-login throttling) and `POST /api/auth/logout` using nuxt-auth-utils with a 30-day HTTP-only, SameSite=Lax cookie and Secure flag controlled by `NUXT_SESSION_COOKIE_SECURE`; verify API tests for success, wrong password, unknown user, logout, cookie attributes in both secure modes
 - [x] 4.2 Add server middleware returning 401 for every `/api/*` route except login and health when there is no session; verify an API test that iterates all data endpoints without a session and expects 401
 - [x] 4.3 Build the login page and a global client route middleware redirecting unauthenticated users to `/login`, plus a logout action in the app layout; verify E2E tests: login success, wrong password message, redirect when not logged in, logout returns to login, session survives a page reload
+- [x] 4.4 Identify clients for login throttling by connection address, trusting `CF-Connecting-IP` / last `X-Forwarded-For` entry only when `NUXT_TRUSTED_PROXY` is `cloudflare` / `generic` (invalid value refuses startup); verify unit tests for each mode and API tests showing forged headers cannot bypass the lockout
 
 ## 5. Exercise catalog
 
@@ -53,5 +54,5 @@
 
 ## 8. Integration verification
 
-- [ ] 8.1 Run the full suite in Docker (unit + API with coverage >= 80% on server and shared, E2E) and in GitHub Actions; verify all jobs pass and the coverage threshold is enforced
+- [x] 8.1 Run the full suite in Docker (unit + API with coverage >= 80% on server and shared, E2E) and in GitHub Actions; verify all jobs pass and the coverage threshold is enforced
 - [ ] 8.2 Perform the manual checklist on a real phone over home Wi-Fi against `docker compose up` (login, log trainer and solo workouts, last-time values, edit/delete, progress chart, restart container and confirm data persists); record results in the README or PR description

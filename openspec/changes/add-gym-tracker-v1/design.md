@@ -104,7 +104,7 @@ Zod schemas for exercise and workout payloads, kind-aware set validation (requir
 - Session stored in an encrypted, HTTP-only, `SameSite=Lax` cookie with `maxAge` 30 days, sealed with a key derived from Nuxt's `appSecret` (`NUXT_APP_SECRET`, >= 32 chars; nuxt-auth-utils >= 0.6 no longer uses `NUXT_SESSION_PASSWORD`). No session table needed.
 - Server middleware rejects `/api/*` (except `/api/auth/login`, `/api/health`) with 401 when no session; a global client route middleware redirects to `/login`.
 - Secure flag: on by default (`runtimeConfig.session.cookie.secure`); the local compose file sets `NUXT_SESSION_COOKIE_SECURE=false` so a phone on the LAN can log in over plain HTTP. Hosted deployments keep the default (spec auth: secure cookie in production).
-- Basic brute-force damping: a small in-memory delay/limit on failed logins (single instance, so in-memory is sufficient).
+- Basic brute-force damping: a small in-memory delay/limit on failed logins (single instance, so in-memory is sufficient). Clients are identified by the TCP peer address by default; forwarding headers are client-forgeable and are only used when `NUXT_TRUSTED_PROXY` names the proxy in front (`cloudflare`: `CF-Connecting-IP`; `generic`: last `X-Forwarded-For` entry).
 - Alternatives: HTTP basic auth (poor phone UX, no logout); hand-rolled JWT (more code, no benefit).
 
 ### D7. Configuration
@@ -116,6 +116,7 @@ Zod schemas for exercise and workout payloads, kind-aware set validation (requir
 | `NUXT_APP_USERNAME` / `NUXT_APP_PASSWORD` | Login credentials | `.env` (gitignored) |
 | `NUXT_APP_SECRET` | Cookie sealing secret (Nuxt appSecret) | `.env` (gitignored) |
 | `NUXT_SESSION_COOKIE_SECURE` | `false` only for local HTTP | compose |
+| `NUXT_TRUSTED_PROXY` | `none` (default) / `cloudflare` / `generic`: which proxy header identifies clients for login throttling | host / tunnel setup |
 
 A startup check fails fast (process exits, logs the missing variable name only) when credentials or session secret are absent. A committed `.env.example` lists the variables with placeholder values; real values never enter git.
 

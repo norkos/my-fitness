@@ -20,7 +20,7 @@ export interface TestApp {
   url: string
   dbPath: string
   logs: string[]
-  request: <T = any>(path: string, init?: { method?: string, body?: unknown, cookie?: string }) => Promise<ApiResponse<T>>
+  request: <T = any>(path: string, init?: { method?: string, body?: unknown, cookie?: string, headers?: Record<string, string> }) => Promise<ApiResponse<T>>
   login: (username?: string, password?: string) => Promise<string>
   stop: () => Promise<void>
 }
@@ -106,7 +106,7 @@ export async function startApp(options: { env?: Record<string, string | undefine
   }
 
   const request: TestApp['request'] = async (path, init = {}) => {
-    const headers: Record<string, string> = {}
+    const headers: Record<string, string> = { ...init.headers }
     if (init.body !== undefined) headers['content-type'] = 'application/json'
     if (init.cookie) headers.cookie = init.cookie
     const res = await fetch(`${url}${path}`, {

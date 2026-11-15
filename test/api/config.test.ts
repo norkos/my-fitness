@@ -8,6 +8,12 @@ describe('startup configuration', () => {
     expect(output).toContain(`${key} is not set`)
   })
 
+  it('refuses to start with an unknown NUXT_TRUSTED_PROXY', async () => {
+    const { code, output } = await runAppExpectingExit({ NUXT_TRUSTED_PROXY: 'everyone' })
+    expect(code).toBe(1)
+    expect(output).toContain('NUXT_TRUSTED_PROXY must be one of: none, cloudflare, generic')
+  })
+
   it('does not print secret values when refusing to start', async () => {
     const { code, output } = await runAppExpectingExit({ NUXT_APP_SECRET: 'too-short', NUXT_APP_PASSWORD: 'visible-password' })
     expect(code).toBe(1)

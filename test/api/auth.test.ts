@@ -83,6 +83,61 @@ describe('auth throttling', () => {
   })
 })
 
+describe('auth throttling with forged forwarding headers', () => {
+  let app: TestApp
+
+  beforeAll(async () => {
+    app = await startApp()
+  })
+
+  afterAll(async () => {
+    await app?.stop()
+  })
+
+  it('still blocks a client that changes X-Forwarded-For and CF-Connecting-IP on every attempt', async () => {
+    for (let i = 0; i < 5; i++) {
+      const res = await app.request('/api/auth/login', {
+        method: 'POST',
+        body: { username: TEST_USERNAME, password: `bad-${i}` },
+        headers: { 'x-forwarded-for': `203.0.113.${i}`, 'cf-connecting-ip': `198.51.100.${i}` },
+      })
+      expect(res.status).toBe(401)
+    }
+    const blocked = await app.request('/api/auth/login', {
+      method: 'POST',
+      body: { username: TEST_USERNAME, password: TEST_PASSWORD },
+      headers: { 'x-forwarded-for': '203.0.113.99', 'cf-connecting-ip': '198.51.100.99' },
+    })
+    expect(blocked.status).toBe(429)
+  })
+})
+
+describe('auth throttling behind Cloudflare', () => {
+  let app: TestApp
+
+  beforeAll(async () => {
+    app = await startApp({ env: { NUXT_TRUSTED_PROXY: 'cloudflare' } })
+  })
+
+  afterAll(async () => {
+    await app?.stop()
+  })
+
+  const attempt = (ip: string, password: string) => app.request('/api/auth/login', {
+    method: 'POST',
+    body: { username: TEST_USERNAME, password },
+    headers: { 'cf-connecting-ip': ip, 'x-forwarded-for': '203.0.113.1' },
+  })
+
+  it('throttles per CF-Connecting-IP, so one attacker does not lock out the owner', async () => {
+    for (let i = 0; i < 5; i++) {
+      expect((await attempt('198.51.100.7', `bad-${i}`)).status).toBe(401)
+    }
+    expect((await attempt('198.51.100.7', TEST_PASSWORD)).status).toBe(429)
+    expect((await attempt('192.0.2.10', TEST_PASSWORD)).status).toBe(200)
+  })
+})
+
 describe('auth (production mode)', () => {
   let app: TestApp
 

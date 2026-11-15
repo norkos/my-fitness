@@ -1,9 +1,15 @@
 import { INVALID_CREDENTIALS_MESSAGE, loginSchema, SESSION_MAX_AGE_SECONDS } from '../../../shared/auth'
+import { resolveClientKey } from '../../lib/client-ip'
 import { readServerConfig } from '../../lib/config'
 import { credentialsMatch } from '../../lib/credentials'
 
 export default defineEventHandler(async (event) => {
-  const clientKey = getRequestIP(event, { xForwardedFor: true }) ?? 'unknown'
+  const config = readServerConfig(process.env)
+  const clientKey = resolveClientKey(config.trustedProxy, {
+    socketAddress: getRequestIP(event),
+    cfConnectingIp: getRequestHeader(event, 'cf-connecting-ip'),
+    xForwardedFor: getRequestHeader(event, 'x-forwarded-for'),
+  })
 
   const retryAfterMs = loginThrottle.retryAfter(clientKey)
   if (retryAfterMs > 0) {
@@ -16,7 +22,6 @@ export default defineEventHandler(async (event) => {
     throw createError({ status: 400, message: INVALID_CREDENTIALS_MESSAGE })
   }
 
-  const config = readServerConfig(process.env)
   if (!credentialsMatch(parsed.data, config)) {
     loginThrottle.recordFailure(clientKey)
     throw createError({ status: 401, message: INVALID_CREDENTIALS_MESSAGE })
