@@ -1,0 +1,16 @@
+node_modules
+.output
+.nuxt
+.nitro
+.cache
+.git
+.opencode
+data
+.env
+.env.*
+!.env.example
+coverage
+test-results
+playwright-report
+blob-report
+*.log

@@ -1,0 +1,41 @@
+# End-to-end tests against the production image with a throwaway database.
+# docker compose -f compose.test.yaml up --build --abort-on-container-exit --exit-code-from e2e
+name: my-fitness-e2e
+
+services:
+  # Not named "app": Chromium force-upgrades http://app to HTTPS (.app is HSTS-preloaded).
+  web:
+    build:
+      context: .
+      target: runtime
+    environment:
+      PORT: "3000"
+      NUXT_DATABASE_PATH: /data/fitness.db
+      NUXT_APP_USERNAME: e2e-user
+      NUXT_APP_PASSWORD: e2e-password-123
+      NUXT_APP_SECRET: e2e-secret-that-is-at-least-32-characters-long
+      NUXT_SESSION_COOKIE_SECURE: "false"
+    tmpfs:
+      - /data:uid=1000,gid=1000
+    healthcheck:
+      test: ["CMD", "node", "-e", "fetch('http://127.0.0.1:3000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  e2e:
+    build:
+      context: .
+      target: e2e
+    depends_on:
+      web:
+        condition: service_healthy
+    environment:
+      E2E_BASE_URL: http://web:3000
+      E2E_USERNAME: e2e-user
+      E2E_PASSWORD: e2e-password-123
+      CI: ${CI:-}
+    ipc: host
+    volumes:
+      - ./playwright-report:/e2e/playwright-report
+      - ./test-results:/e2e/test-results

@@ -1,0 +1,30 @@
+services:
+  app:
+    build:
+      context: .
+      target: runtime
+    image: my-fitness:local
+    env_file: .env
+    environment:
+      PORT: "3000"
+      NUXT_DATABASE_PATH: /data/fitness.db
+      # Local HTTP only (e.g. phone on home Wi-Fi). Never set this when hosted.
+      NUXT_SESSION_COOKIE_SECURE: "false"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/data
+    restart: unless-stopped
+
+  # Unit + API tests with coverage: docker compose run --rm --build test
+  test:
+    profiles: ["test"]
+    build:
+      context: .
+      target: build
+    # coverage/ is a mount point here, so vitest must not try to delete it
+    command: ["npm", "test", "--", "--coverage.clean=false"]
+    environment:
+      CI: ${CI:-}
+    volumes:
+      - ./coverage:/app/coverage

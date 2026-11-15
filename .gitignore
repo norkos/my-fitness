@@ -1,0 +1,58 @@
+# Dependencies
+node_modules/
+
+# Nuxt / Nitro / Vite build output and caches
+.output/
+.nuxt/
+.nitro/
+.cache/
+.vite/
+.data/
+dist/
+.eslintcache
+*.tsbuildinfo
+
+# Local data: SQLite database with real workouts (never commit)
+data/
+*.db
+*.db-shm
+*.db-wal
+*.sqlite
+*.sqlite3
+
+# Secrets: keep only the example file
+.env
+.env.*
+!.env.example
+
+# Test output
+coverage/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# Logs
+*.log
+npm-debug.log*
+logs/
+
+# Editors and IDEs
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.swp
+*~
+
+# Agentic dev
+.agents
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+tmp/
+*.tmp
