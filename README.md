@@ -1,114 +1,54 @@
 # My Fitness
 
-A small, phone-first web app for tracking gym progress: log each workout (solo or with a trainer) after the session, see what you did last time, and follow progress per exercise.
+**Your gym notebook, on your phone. Know what you lifted last time, and see whether you are getting stronger.**
 
-Single user. Nuxt 4 (Vue) app with a built-in server API and a SQLite database file.
+Most people who train regularly hit the same wall: standing at the bench, trying to remember whether last week was 50 kg for 8 or 52.5 kg for 6. Paper notebooks get lost, spreadsheets are painful on a phone, and the big fitness apps bury a simple log under social feeds, subscriptions and plans you never asked for.
 
-## Requirements
+My Fitness does one thing well: it records what you did in the gym and shows you how you are progressing. It is a small private web app you host yourself, built for one person and designed to be used one-handed on a phone between sets or right after a session.
 
-- Docker Desktop (for running and testing exactly as in production)
-- Node.js 24 LTS + npm (only for working on the code outside Docker)
+## What it does today
 
-## Configuration
+### Log a workout in under a minute
+- Record a session with its date (today by default), whether you trained **solo or with a trainer**, and any number of exercises and sets.
+- **Last time's numbers are already there.** When you add an exercise, the app shows what you did the previous time and pre-fills the new sets with those values, so you only change what went up.
+- Mistakes are caught before saving (a missing weight, a set with no reps), the problem is highlighted, and nothing you typed is lost.
+- Fix or delete any past workout later. Deleting asks for confirmation first.
 
-All configuration comes from environment variables. Copy the example file and fill in real values:
+### Exercises that fit how you actually train
+Every exercise has a kind, and the kind decides what you record for each set:
 
-```bash
-cp .env.example .env
-```
+| Kind | Example | Recorded per set |
+| --- | --- | --- |
+| Weight × reps | Bench press | weight (kg) and reps |
+| Bodyweight | Pull-ups | reps, optional added weight |
+| Timed | Plank | duration |
+| Cardio | Rowing | duration, optional distance |
 
-| Variable | Purpose |
-| --- | --- |
-| `NUXT_APP_USERNAME` | Login username |
-| `NUXT_APP_PASSWORD` | Login password |
-| `NUXT_APP_SECRET` | Secret (32+ chars) used to encrypt the session cookie |
-| `NUXT_DATABASE_PATH` | SQLite file path (Docker uses `/data/fitness.db`) |
-| `PORT` | Port to listen on (default `3000`) |
-| `NUXT_SESSION_COOKIE_SECURE` | Set to `false` **only** for local HTTP testing. Leave unset when hosted. |
-| `NUXT_TRUSTED_PROXY` | How to identify clients for the login lockout: unset/`none` (direct connection, default), `cloudflare` (behind Cloudflare / Cloudflare Tunnel, uses `CF-Connecting-IP`), `generic` (behind one reverse proxy such as Railway, uses the last `X-Forwarded-For` entry). Only set it when that proxy really is in front; otherwise clients could forge the header. |
+Build your own exercise list, and rename an exercise at any time without losing its history.
 
-Generate a secret with:
+### See your progress
+- A **progress chart per exercise**, using the measure that makes sense for its kind: heaviest set for lifts, most reps for bodyweight work, longest hold for timed exercises, and longest duration and distance for cardio.
+- A **full history** under the chart: every session with that exercise, newest first, with all its sets.
+- Open progress from the exercise list, or straight from an exercise inside any workout.
 
-```bash
-node -e "console.log(require('crypto').randomBytes(32).toString('base64'))"
-```
+### Private and yours
+- **Single user, self-hosted.** Your data lives in one file on your own machine or server. No account with anyone, no tracking, no ads.
+- **Stay logged in** for 30 days, so opening the app at the gym is instant.
+- **Security built in:** throttled login attempts, protection against cross-site attacks, and strict browser security headers.
+- Runs anywhere Docker runs: your PC on home Wi-Fi, a small home server, or a cloud host.
 
-`.env` and `data/` are gitignored. Never commit real credentials.
+## Built to be trusted with your data
 
-The app refuses to start if the username, password or secret is missing.
+Every feature is covered by automated tests at three levels: logic, API, and real-browser tests on a phone-sized screen. They run on every change. Workouts survive restarts and updates, and that is tested too.
 
-## Run locally with Docker
+## Try it
+
+You need Docker. Copy `.env.example` to `.env`, set a username, password and secret, then:
 
 ```bash
 docker compose up --build
 ```
 
-Open http://localhost:3000. Data is stored in `./data/fitness.db` on your machine, so it survives `docker compose down` and image rebuilds.
+Open http://localhost:3000, or `http://<your-pc-ip>:3000` from your phone on the same Wi-Fi.
 
-Stop with `Ctrl+C` or `docker compose down`.
-
-### Use it from your phone on home Wi-Fi
-
-1. Find your PC's IP address (Windows: `ipconfig`, look for the Wi-Fi adapter's IPv4 address, e.g. `192.168.1.20`).
-2. On the phone (same Wi-Fi), open `http://<that-ip>:3000`.
-3. If it does not load, allow inbound TCP port 3000 in Windows Defender Firewall (private networks only), for example from an elevated PowerShell:
-
-   ```powershell
-   New-NetFirewallRule -DisplayName "My Fitness 3000" -Direction Inbound -Protocol TCP -LocalPort 3000 -Action Allow -Profile Private
-   ```
-
-Login works over plain HTTP here because `compose.yaml` sets `NUXT_SESSION_COOKIE_SECURE=false`.
-
-## Tests
-
-Three layers, all runnable in Docker:
-
-| Layer | What | Command |
-| --- | --- | --- |
-| Unit | Shared logic and server services, in-process, with coverage (80% threshold) | `docker compose run --rm --build test` |
-| API | Every endpoint against the built server with a temporary database | (included in the command above) |
-| E2E | Playwright, phone-sized Chromium, against the production image | `docker compose -f compose.test.yaml up --build --abort-on-container-exit --exit-code-from e2e` |
-
-After the E2E run, clean up with `docker compose -f compose.test.yaml down`. Reports land in `coverage/` and `playwright-report/`.
-
-Tests never touch `./data`; they use temporary databases and dummy credentials.
-
-### Without Docker
-
-```bash
-npm ci
-npm run lint
-npm run typecheck
-npm run build      # API tests run against the built server
-npm test           # unit + API with coverage
-```
-
-For E2E outside Docker, start the app (`npm run build && npm start` with a `.env`), then run `npx playwright install chromium` once and:
-
-```bash
-E2E_BASE_URL=http://localhost:3000 E2E_USERNAME=... E2E_PASSWORD=... npm run test:e2e
-```
-
-### Manual checks
-
-Before relying on a new version, run through these against `docker compose up --build`:
-
-- Log in with your credentials; a wrong password is rejected.
-- Log a trainer workout and a solo workout; the second time you add an exercise, last time's values are pre-filled.
-- Edit a set value and delete a workout (cancel once, then confirm).
-- Open an exercise's progress chart and history.
-- **Persistence:** run `docker compose down`, then `docker compose up -d`, and confirm your workouts are still there. (The automated API suite checks the same thing at the process level.)
-- Open the app on your phone over Wi-Fi and check the layout.
-
-## CI
-
-GitHub Actions (`.github/workflows/ci.yml`) runs lint, typecheck, unit + API tests with coverage, and the Docker E2E suite on every push and pull request.
-
-## Development
-
-```bash
-npm ci
-npm run dev        # http://localhost:3000 with hot reload, reads .env
-```
-
-Database schema changes: edit `server/db/schema.ts`, then run `npm run db:generate` and commit the generated migration in `server/db/migrations/`. Migrations are applied automatically on startup.
+Configuration, phone access, tests and development are all in the **[Development Guide](DEVELOPMENT.md)**.

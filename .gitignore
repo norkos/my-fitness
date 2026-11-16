@@ -47,6 +47,8 @@ logs/
 
 # Agentic dev
 .agents
+.claude/
+skills-lock.json
 
 # OS files
 .DS_Store
