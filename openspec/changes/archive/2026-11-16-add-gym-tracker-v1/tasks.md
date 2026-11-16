@@ -55,4 +55,4 @@
 ## 8. Integration verification
 
 - [x] 8.1 Run the full suite in Docker (unit + API with coverage >= 80% on server and shared, E2E) and in GitHub Actions; verify all jobs pass and the coverage threshold is enforced
-- [ ] 8.2 Perform the manual checklist on a real phone over home Wi-Fi against `docker compose up` (login, log trainer and solo workouts, last-time values, edit/delete, progress chart, restart container and confirm data persists); record results in the README or PR description
+- [x] 8.2 Perform the manual checklist on a real phone over home Wi-Fi against `docker compose up` (login, log trainer and solo workouts, last-time values, edit/delete, progress chart, restart container and confirm data persists); record results in the README or PR description — confirmed working by the owner on 2026-11-16
