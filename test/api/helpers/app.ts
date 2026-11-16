@@ -44,7 +44,7 @@ function baseEnv(dbPath: string, port: number, overrides: Record<string, string 
   return env
 }
 
-async function freePort(): Promise<number> {
+export async function freePort(): Promise<number> {
   return new Promise((res, rej) => {
     const srv = createServer()
     srv.unref()

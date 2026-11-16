@@ -97,6 +97,13 @@ describe('validateWorkout: rejections', () => {
     expect(errors.sessionType).toBe('Choose solo or trainer')
   })
 
+  it('caps the number of exercises and sets', () => {
+    const manySets = Array.from({ length: 31 }, () => ({ durationS: 10 }))
+    expect(errorsOf(workout([{ exerciseId: 3, sets: manySets }]))['exercises.0.sets']).toBe('At most 30 sets per exercise')
+    const manyExercises = Array.from({ length: 31 }, () => ({ exerciseId: 3, sets: [{ durationS: 1 }] }))
+    expect(errorsOf(workout(manyExercises)).exercises).toBe('At most 30 exercises per workout')
+  })
+
   it('rejects a missing body', () => {
     expect(validateWorkout(undefined, kindOf).success).toBe(false)
   })

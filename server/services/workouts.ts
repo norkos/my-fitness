@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray, lt, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, lt, sql } from 'drizzle-orm'
 import type { ExerciseKind } from '../../shared/kinds'
 import {
   isValidIsoDate,
@@ -157,7 +157,7 @@ export function getLastTime(db: Db, exerciseId: number, before?: string): LastTi
   const rows = db
     .select({ weightKg: sets.weightKg, reps: sets.reps, durationS: sets.durationS, distanceM: sets.distanceM })
     .from(sets)
-    .where(inArray(sets.workoutExerciseId, [latest.weId]))
+    .where(eq(sets.workoutExerciseId, latest.weId))
     .orderBy(asc(sets.position))
     .all()
   return { date: latest.date, sets: rows.map(toSetValues) }

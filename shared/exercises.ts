@@ -28,7 +28,8 @@ export type UpdateExerciseInput = z.infer<typeof updateExerciseSchema>
 
 /** Key used for case- and whitespace-insensitive uniqueness. */
 export function exerciseNameKey(name: string): string {
-  return name.trim().toLocaleLowerCase()
+  // NFC so composed and decomposed accents compare equal; locale-independent lowercasing.
+  return name.trim().normalize('NFC').toLowerCase()
 }
 
 export interface Exercise {

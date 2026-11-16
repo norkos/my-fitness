@@ -2,7 +2,7 @@ import { mkdirSync, rmSync } from 'node:fs'
 import { spawn } from 'node:child_process'
 import { join, resolve } from 'node:path'
 import { describe, expect, it } from 'vitest'
-import { startApp, tempDbPath } from './helpers/app'
+import { freePort, startApp, tempDbPath } from './helpers/app'
 
 describe('GET /api/health', () => {
   it('returns 200 without a session when the database is reachable', async () => {
@@ -23,7 +23,7 @@ describe('GET /api/health', () => {
     const dbPath = join(dir, 'is-a-directory')
     mkdirSync(dbPath, { recursive: true })
 
-    const port = 40000 + Math.floor(Math.random() * 20000)
+    const port = await freePort()
     const child = spawn(process.execPath, [resolve(process.cwd(), '.output/server/index.mjs')], {
       env: {
         ...process.env,

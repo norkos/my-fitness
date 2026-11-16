@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { ServiceError } from '../../server/lib/errors'
-import { createExercise, getExercise, listExercises, updateExercise } from '../../server/services/exercises'
+import { createExercise, getExercise, listExercises, updateExercise, withUniqueName } from '../../server/services/exercises'
 import { createTempDb, type TempDb } from './helpers/db'
 import { insertRawUsage } from './helpers/fixtures'
 
@@ -45,6 +45,22 @@ describe('createExercise', () => {
   it('rejects a blank name', () => {
     const e = expectServiceError(() => createExercise(t.db, { name: ' ', kind: 'timed' }), 'validation', 'name')
     expect(e.status).toBe(400)
+  })
+})
+
+describe('withUniqueName', () => {
+  it('turns a unique-index violation from a lost race into a conflict', () => {
+    const e = expectServiceError(() => withUniqueName(() => {
+      throw Object.assign(new Error('UNIQUE constraint failed'), { code: 'SQLITE_CONSTRAINT_UNIQUE' })
+    }), 'conflict', 'name')
+    expect(e.message).toBe('An exercise with this name already exists')
+  })
+
+  it('rethrows other errors and returns results', () => {
+    expect(() => withUniqueName(() => {
+      throw new Error('disk full')
+    })).toThrow('disk full')
+    expect(withUniqueName(() => 42)).toBe(42)
   })
 })
 

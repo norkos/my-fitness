@@ -31,24 +31,39 @@ export function getExercise(db: Db, id: number): Exercise {
   return toExercise(row)
 }
 
+function duplicateName(): ServiceError {
+  return new ServiceError('conflict', DUPLICATE_MESSAGE, { name: DUPLICATE_MESSAGE })
+}
+
+/** Runs a write, turning a lost race on the unique name index into the same conflict as the pre-check. */
+export function withUniqueName<T>(write: () => T): T {
+  try {
+    return write()
+  }
+  catch (error) {
+    if ((error as { code?: string }).code === 'SQLITE_CONSTRAINT_UNIQUE') throw duplicateName()
+    throw error
+  }
+}
+
 function assertNameFree(db: Db, nameKey: string, exceptId?: number) {
   const clash = db
     .select({ id: exercises.id })
     .from(exercises)
     .where(exceptId === undefined ? eq(exercises.nameKey, nameKey) : and(eq(exercises.nameKey, nameKey), ne(exercises.id, exceptId)))
     .get()
-  if (clash) throw new ServiceError('conflict', DUPLICATE_MESSAGE, { name: DUPLICATE_MESSAGE })
+  if (clash) throw duplicateName()
 }
 
 export function createExercise(db: Db, input: unknown): Exercise {
   const data = parseInput(createExerciseSchema, input)
   const nameKey = exerciseNameKey(data.name)
   assertNameFree(db, nameKey)
-  const row = db
+  const row = withUniqueName(() => db
     .insert(exercises)
     .values({ name: data.name, nameKey, kind: data.kind, createdAt: new Date() })
     .returning({ id: exercises.id })
-    .get()
+    .get())
   return getExercise(db, row.id)
 }
 
@@ -73,7 +88,7 @@ export function updateExercise(db: Db, id: number, input: unknown): Exercise {
   }
 
   if (Object.keys(changes).length) {
-    db.update(exercises).set(changes).where(eq(exercises.id, id)).run()
+    withUniqueName(() => db.update(exercises).set(changes).where(eq(exercises.id, id)).run())
   }
   return getExercise(db, id)
 }

@@ -72,15 +72,22 @@ export function isValidIsoDate(value: string): boolean {
 
 export const isoDateSchema = z.string({ error: 'Date is required' }).refine(isValidIsoDate, 'Enter a valid date')
 
+export const MAX_EXERCISES_PER_WORKOUT = 30
+export const MAX_SETS_PER_EXERCISE = 30
+
 export const workoutStructureSchema = z.object({
   date: isoDateSchema,
   sessionType: z.enum(SESSION_TYPES, { error: 'Choose solo or trainer' }),
   exercises: z
     .array(z.object({
       exerciseId: z.number({ error: 'Choose an exercise' }).int().positive(),
-      sets: z.array(setSchema).min(1, 'Add at least one set'),
+      sets: z
+        .array(setSchema)
+        .min(1, 'Add at least one set')
+        .max(MAX_SETS_PER_EXERCISE, `At most ${MAX_SETS_PER_EXERCISE} sets per exercise`),
     }))
-    .min(1, 'Add at least one exercise'),
+    .min(1, 'Add at least one exercise')
+    .max(MAX_EXERCISES_PER_WORKOUT, `At most ${MAX_EXERCISES_PER_WORKOUT} exercises per workout`),
 })
 
 export type WorkoutValidationResult =

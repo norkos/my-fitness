@@ -31,6 +31,13 @@ describe('exerciseNameKey', () => {
   it('ignores case and surrounding whitespace', () => {
     expect(exerciseNameKey(' bench PRESS ')).toBe(exerciseNameKey('Bench press'))
   })
+
+  it('treats composed and decomposed accents as the same name', () => {
+    const composed = 'Wyciskanie leżąc'
+    const decomposed = 'Wyciskanie leżąc'
+    expect(composed).not.toBe(decomposed)
+    expect(exerciseNameKey(decomposed)).toBe(exerciseNameKey(composed))
+  })
 })
 
 describe('createExerciseSchema', () => {
