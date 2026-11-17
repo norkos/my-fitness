@@ -22,13 +22,13 @@ describe('parsePlan on the trainer example', () => {
 
   it('reads all eight rows in table order with their values and links, including a row without one', () => {
     expect(parsed.map(r => [r.name, r.sets, r.reps, r.durationS, r.weightKg, r.videoUrl])).toEqual([
-      ['Wyciskanie hantli leżąc', 4, 10, null, 12.5, 'https://example.com/videos/dumbbell-press'],
-      ['Wiosłowanie hantlem w opadzie', 3, 10, null, 20, 'https://example.com/videos/dumbbell-row'],
-      ['Rozpiętki na ławce płaskiej', 3, 15, null, 6, 'https://example.com/videos/flyes'],
-      ['Wykroki z hantlami', 3, 10, null, 10, 'https://example.com/videos/lunges'],
-      ['Wznosy boczne', 3, 15, null, 4, 'https://example.com/videos/lateral-raise'],
-      ['Uginanie przedramion z hantlami', 3, 10, null, 8, null],
-      ['Deska', 3, null, 40, null, 'https://example.com/videos/plank'],
+      ['Dumbbell bench press', 4, 10, null, 12.5, 'https://example.com/videos/dumbbell-press'],
+      ['Bent-over dumbbell row', 3, 10, null, 20, 'https://example.com/videos/dumbbell-row'],
+      ['Flat bench flyes', 3, 15, null, 6, 'https://example.com/videos/flyes'],
+      ['Dumbbell lunges', 3, 10, null, 10, 'https://example.com/videos/lunges'],
+      ['Lateral raise', 3, 15, null, 4, 'https://example.com/videos/lateral-raise'],
+      ['Dumbbell curl', 3, 10, null, 8, null],
+      ['Plank', 3, null, 40, null, 'https://example.com/videos/plank'],
       ["Russian twist's", 3, null, 20, null, 'https://example.com/videos/russian-twist'],
     ])
   })
@@ -55,14 +55,14 @@ describe('parsePlan edge cases', () => {
     const page: PdfPageContent = {
       ...example,
       items: example.items.map((i) => {
-        if (i.str === '12,5kg') return { ...i, str: 'lekko' }
+        if (i.str === '12,5kg') return { ...i, str: 'light' }
         if (i === flyesReps) return { ...i, str: '12-15' }
         return i
       }),
     }
     const [first, , third] = rows(page)
     expect(first!.weightKg).toBeNull()
-    expect(first!.issues).toEqual(['Weight "lekko" could not be read'])
+    expect(first!.issues).toEqual(['Weight "light" could not be read'])
     expect(third!.reps).toBeNull()
     expect(third!.issues).toEqual(['Reps "12-15" could not be read'])
   })
@@ -78,9 +78,9 @@ describe('parsePlan edge cases', () => {
   })
 
   it('joins a name wrapped onto a second line', () => {
-    const deska = example.items.find(i => i.str === 'Deska')!
-    const page: PdfPageContent = { ...example, items: [...example.items, { ...deska, str: 'na łokciach', y: deska.y - 4.5 }] }
-    expect(rows(page)[6]!.name).toBe('Deska na łokciach')
+    const plank = example.items.find(i => i.str === 'Plank')!
+    const page: PdfPageContent = { ...example, items: [...example.items, { ...plank, str: 'on elbows', y: plank.y - 4.5 }] }
+    expect(rows(page)[6]!.name).toBe('Plank on elbows')
   })
 
   it('reads only the first of repeated weight columns', () => {
@@ -116,7 +116,7 @@ describe('toPageContent', () => {
   it('keeps positioned text and URL links only', () => {
     const content = toPageContent(
       [
-        { str: 'Deska', transform: [1, 0, 0, 1, 202.771, 456.824], width: 18.6, height: 7.3 },
+        { str: 'Plank', transform: [1, 0, 0, 1, 202.771, 456.824], width: 18.6, height: 7.3 },
         { str: '  ', transform: [1, 0, 0, 1, 0, 0], width: 1, height: 1 },
         { type: 'beginMarkedContent' },
       ],
@@ -127,28 +127,28 @@ describe('toPageContent', () => {
       ],
     )
     expect(content).toEqual({
-      items: [{ str: 'Deska', x: 202.77, y: 456.82, width: 18.6, height: 7.3 }],
+      items: [{ str: 'Plank', x: 202.77, y: 456.82, width: 18.6, height: 7.3 }],
       links: [{ url: 'https://example.com/videos/x', rect: [1, 2, 3, 4] }],
     })
   })
 })
 
 describe('name matching', () => {
-  const catalog = [{ id: 1, name: 'Deska' }, { id: 2, name: 'Russian twist' }, { id: 3, name: 'Wznosy bokiem' }]
+  const catalog = [{ id: 1, name: 'Plank' }, { id: 2, name: 'Russian twist' }, { id: 3, name: 'Side lateral raise' }]
 
   it('ignores case and surrounding whitespace', () => {
-    expect(matchExercise(' deska ', catalog)?.id).toBe(1)
+    expect(matchExercise(' plank ', catalog)?.id).toBe(1)
   })
 
   it('ignores a trailing apostrophe suffix and punctuation', () => {
     expect(matchExercise("Russian twist's", catalog)?.id).toBe(2)
     expect(matchExercise('Russian twist’s', catalog)?.id).toBe(2)
-    expect(matchExercise('Deska.', catalog)?.id).toBe(1)
+    expect(matchExercise('Plank.', catalog)?.id).toBe(1)
   })
 
   it('collapses inner whitespace but does not fuzzy-match different names', () => {
-    expect(importNameKey('Wznosy   boczne')).toBe('wznosy boczne')
-    expect(matchExercise('Wznosy boczne', catalog)).toBeUndefined()
+    expect(importNameKey('Lateral   raise')).toBe('lateral raise')
+    expect(matchExercise('Lateral raise', catalog)).toBeUndefined()
   })
 })
 

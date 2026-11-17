@@ -9,17 +9,17 @@ if (!output) {
   process.exit(1)
 }
 
-const TITLE = 'Plan treningowy'
+const TITLE = 'Training plan'
 const HEADER = ['Nr.', 'Nazwa Ćwiczenia', 'Serie', 'Ruchy', 'Tempo', 'RIR', 'Ciężar T1']
 // [number, name, sets, reps, tempo, rir, weight, link]. Row 3b has no video on purpose.
 const ROWS = [
-  ['1a', 'Wyciskanie hantli leżąc', '4', '10', '3010', '2', '12,5kg', 'https://example.com/videos/dumbbell-press'],
-  ['1b', 'Wiosłowanie hantlem w opadzie', '3', '10', '2011', '2', '20kg', 'https://example.com/videos/dumbbell-row'],
-  ['2a', 'Rozpiętki na ławce płaskiej', '3', '15', '2010', '1', '6/8kg', 'https://example.com/videos/flyes'],
-  ['2b', 'Wykroki z hantlami', '3', '10', '2010', '2', '10kg', 'https://example.com/videos/lunges'],
-  ['3a', 'Wznosy boczne', '3', '15', '2010', '1', '4kg', 'https://example.com/videos/lateral-raise'],
-  ['3b', 'Uginanie przedramion z hantlami', '3', '10', '3010', '1', '8kg', null],
-  ['4a', 'Deska', '3', '40s', '2010', '1', '40s', 'https://example.com/videos/plank'],
+  ['1a', 'Dumbbell bench press', '4', '10', '3010', '2', '12,5kg', 'https://example.com/videos/dumbbell-press'],
+  ['1b', 'Bent-over dumbbell row', '3', '10', '2011', '2', '20kg', 'https://example.com/videos/dumbbell-row'],
+  ['2a', 'Flat bench flyes', '3', '15', '2010', '1', '6/8kg', 'https://example.com/videos/flyes'],
+  ['2b', 'Dumbbell lunges', '3', '10', '2010', '2', '10kg', 'https://example.com/videos/lunges'],
+  ['3a', 'Lateral raise', '3', '15', '2010', '1', '4kg', 'https://example.com/videos/lateral-raise'],
+  ['3b', 'Dumbbell curl', '3', '10', '3010', '1', '8kg', null],
+  ['4a', 'Plank', '3', '40s', '2010', '1', '40s', 'https://example.com/videos/plank'],
   ['4b', "Russian twist's", '3', '20s', 'ISO', '1', '20s', 'https://example.com/videos/russian-twist'],
 ]
 

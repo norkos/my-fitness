@@ -96,7 +96,7 @@ describe('exercises API', () => {
   })
 
   it('sets, returns and clears a video link', async () => {
-    const created = await post({ name: 'Deska', kind: 'timed', videoUrl: 'https://example.com/videos/plank' })
+    const created = await post({ name: 'Side plank', kind: 'timed', videoUrl: 'https://example.com/videos/plank' })
     expect(created.status).toBe(201)
     expect(created.body).toMatchObject({ videoUrl: 'https://example.com/videos/plank', lastDoneOn: null })
 

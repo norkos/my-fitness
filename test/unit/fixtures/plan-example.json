@@ -1,10 +1,10 @@
 {
   "items": [
     {
-      "str": "Plan treningowy",
-      "x": 388.8,
+      "str": "Training plan",
+      "x": 392.96,
       "y": 534,
-      "width": 56.91,
+      "width": 46.24,
       "height": 8
     },
     {
@@ -64,10 +64,10 @@
       "height": 8
     },
     {
-      "str": "Wyciskanie hantli leżąc",
-      "x": 164.16,
+      "str": "Dumbbell bench press",
+      "x": 170.4,
       "y": 514.36,
-      "width": 82.69,
+      "width": 79.58,
       "height": 8
     },
     {
@@ -113,10 +113,10 @@
       "height": 8
     },
     {
-      "str": "Wiosłowanie hantlem w opadzie",
-      "x": 151.68,
+      "str": "Bent-over dumbbell row",
+      "x": 166.24,
       "y": 504.72,
-      "width": 113.82,
+      "width": 84.47,
       "height": 8
     },
     {
@@ -162,10 +162,10 @@
       "height": 8
     },
     {
-      "str": "Rozpiętki na ławce płaskiej",
-      "x": 155.84,
+      "str": "Flat bench flyes",
+      "x": 178.72,
       "y": 495.08,
-      "width": 95.58,
+      "width": 56.02,
       "height": 8
     },
     {
@@ -211,10 +211,10 @@
       "height": 8
     },
     {
-      "str": "Wykroki z hantlami",
-      "x": 174.56,
+      "str": "Dumbbell lunges",
+      "x": 180.8,
       "y": 485.44,
-      "width": 67.12,
+      "width": 59.58,
       "height": 8
     },
     {
@@ -260,10 +260,10 @@
       "height": 8
     },
     {
-      "str": "Wznosy boczne",
+      "str": "Lateral raise",
       "x": 184.96,
       "y": 475.8,
-      "width": 56.46,
+      "width": 44.02,
       "height": 8
     },
     {
@@ -309,10 +309,10 @@
       "height": 8
     },
     {
-      "str": "Uginanie przedramion z hantlami",
-      "x": 147.52,
+      "str": "Dumbbell curl",
+      "x": 184.96,
       "y": 466.16,
-      "width": 116.93,
+      "width": 48.9,
       "height": 8
     },
     {
@@ -358,10 +358,10 @@
       "height": 8
     },
     {
-      "str": "Deska",
+      "str": "Plank",
       "x": 201.6,
       "y": 456.52,
-      "width": 22.67,
+      "width": 20.01,
       "height": 8
     },
     {
@@ -453,36 +453,36 @@
     {
       "url": "https://example.com/videos/dumbbell-press",
       "rect": [
-        164.16,
+        170.4,
         512.96,
-        259.84,
+        253.6,
         520.26
       ]
     },
     {
       "url": "https://example.com/videos/dumbbell-row",
       "rect": [
-        151.68,
+        166.24,
         503.32,
-        272.32,
+        257.76,
         510.62
       ]
     },
     {
       "url": "https://example.com/videos/flyes",
       "rect": [
-        155.84,
+        178.72,
         493.68,
-        268.16,
+        245.28,
         500.98
       ]
     },
     {
       "url": "https://example.com/videos/lunges",
       "rect": [
-        174.56,
+        180.8,
         484.04,
-        249.44,
+        243.2,
         491.34
       ]
     },

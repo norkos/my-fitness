@@ -31,8 +31,8 @@ function uniqueDate() {
 
 /** A draft with a weight x reps exercise (3 x 12 at 12.5 kg, with a video) and a timed one (3 x 45 s). */
 async function planWorkout(page: Page): Promise<Plan> {
-  const bench = unique('Wyciskanie')
-  const plank = unique('Deska')
+  const bench = unique('Bench')
+  const plank = unique('Plank')
   const benchId = await createExercise(page, bench, 'weight_reps')
   const plankId = await createExercise(page, plank, 'timed')
   expect((await page.request.patch(`/api/exercises/${benchId}`, { data: { videoUrl: 'https://example.com/videos/dumbbell-press' } })).status()).toBe(200)
@@ -118,10 +118,10 @@ test('refuses a change after the plan was finished elsewhere and says why', asyn
 
 test('swaps an exercise in place, keeping planned sets for the same kind', async ({ page }) => {
   const plan = await planWorkout(page)
-  const tag = unique('Rozpietki')
-  const recent = `${tag} maszyna`
-  const older = `${tag} linki`
-  const never = `${tag} nowe`
+  const tag = unique('Flyes')
+  const recent = `${tag} machine`
+  const older = `${tag} cable`
+  const never = `${tag} new`
   const recentId = await createExercise(page, recent, 'weight_reps')
   const olderId = await createExercise(page, older, 'weight_reps')
   await createExercise(page, never, 'weight_reps')
@@ -147,7 +147,7 @@ test('swaps an exercise in place, keeping planned sets for the same kind', async
 
 test('swaps to another kind using last-time values, after confirming done sets', async ({ page }) => {
   const plan = await planWorkout(page)
-  const rows = unique('Wioslowanie')
+  const rows = unique('Row')
   const rowsId = await createExercise(page, rows, 'weight_reps')
   await createWorkout(page, { date: '2031-05-01', sessionType: 'solo', exercises: [{ exerciseId: rowsId, sets: [{ weightKg: 40, reps: 10 }, { weightKg: 40, reps: 8 }] }] })
 

@@ -18,21 +18,21 @@ describe('plan import API', () => {
   const exercisesNow = async () => (await app.request('/api/exercises', { cookie })).body as any[]
 
   it('creates new exercises and a draft listed as planned, keeping existing videos', async () => {
-    const deska = (await app.request('/api/exercises', { method: 'POST', cookie, body: { name: 'Deska', kind: 'timed', videoUrl: 'https://example.com/videos/mine' } })).body.id
+    const plank = (await app.request('/api/exercises', { method: 'POST', cookie, body: { name: 'Plank', kind: 'timed', videoUrl: 'https://example.com/videos/mine' } })).body.id
 
     const res = await importPlan({
       date: '2026-11-18',
       sessionType: 'trainer',
       rows: [
-        { newExercise: { name: 'Wyciskanie hantli leżąc', kind: 'weight_reps' }, videoUrl: 'https://example.com/videos/dumbbell-press', sets: [{ weightKg: 12.5, reps: 12 }, { weightKg: 12.5, reps: 12 }] },
-        { exerciseId: deska, videoUrl: 'https://example.com/videos/plank', sets: [{ durationS: 45 }] },
+        { newExercise: { name: 'Dumbbell bench press', kind: 'weight_reps' }, videoUrl: 'https://example.com/videos/dumbbell-press', sets: [{ weightKg: 12.5, reps: 12 }, { weightKg: 12.5, reps: 12 }] },
+        { exerciseId: plank, videoUrl: 'https://example.com/videos/plank', sets: [{ durationS: 45 }] },
       ],
     })
     expect(res.status).toBe(201)
     expect(res.body.status).toBe('draft')
     expect(res.body.exercises.map((e: any) => [e.name, e.videoUrl, e.sets.length])).toEqual([
-      ['Wyciskanie hantli leżąc', 'https://example.com/videos/dumbbell-press', 2],
-      ['Deska', 'https://example.com/videos/mine', 1],
+      ['Dumbbell bench press', 'https://example.com/videos/dumbbell-press', 2],
+      ['Plank', 'https://example.com/videos/mine', 1],
     ])
 
     const listed = (await app.request('/api/workouts', { cookie })).body
@@ -45,8 +45,8 @@ describe('plan import API', () => {
       date: '2026-11-19',
       sessionType: 'trainer',
       rows: [
-        { newExercise: { name: 'Wykroki z hantlami', kind: 'weight_reps' }, sets: [{ weightKg: 10, reps: 10 }] },
-        { newExercise: { name: ' DESKA ', kind: 'timed' }, sets: [{ durationS: 45 }] },
+        { newExercise: { name: 'Dumbbell lunges', kind: 'weight_reps' }, sets: [{ weightKg: 10, reps: 10 }] },
+        { newExercise: { name: ' PLANK ', kind: 'timed' }, sets: [{ durationS: 45 }] },
       ],
     })
     expect(res.status).toBe(409)

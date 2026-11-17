@@ -58,7 +58,7 @@ test('requires a kind and a name', async ({ page }) => {
 })
 
 test('adds a video link that opens in a new tab and rejects an unsafe one', async ({ page, context }) => {
-  const name = unique('Deska')
+  const name = unique('Plank')
   await addExercise(page, name, 'timed')
   const item = page.getByTestId('exercise-item').filter({ hasText: name })
   await expect(item.getByTestId('video-link')).toHaveCount(0)

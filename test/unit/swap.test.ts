@@ -2,12 +2,12 @@ import { describe, expect, it } from 'vitest'
 import { swapCandidates, swapSets } from '../../shared/swap'
 
 const catalog = [
-  { id: 1, name: 'Martwy ciąg', lastDoneOn: '2026-11-10' },
-  { id: 2, name: 'wiosłowanie', lastDoneOn: '2026-11-16' },
-  { id: 3, name: 'Biceps', lastDoneOn: null },
-  { id: 4, name: 'Wiosłowanie hantlem', lastDoneOn: '2026-11-16' },
-  { id: 5, name: 'Allahy', lastDoneOn: null },
-  { id: 6, name: 'Deska', lastDoneOn: '2026-11-01' },
+  { id: 1, name: 'Deadlift', lastDoneOn: '2026-11-10' },
+  { id: 2, name: 'cable row', lastDoneOn: '2026-11-16' },
+  { id: 3, name: 'Biceps curl', lastDoneOn: null },
+  { id: 4, name: 'Dumbbell row', lastDoneOn: '2026-11-16' },
+  { id: 5, name: 'Ab rollout', lastDoneOn: null },
+  { id: 6, name: 'Plank', lastDoneOn: '2026-11-01' },
 ]
 
 describe('swapCandidates', () => {
@@ -16,7 +16,7 @@ describe('swapCandidates', () => {
   })
 
   it('searches by name ignoring case', () => {
-    expect(swapCandidates(catalog, new Set(), '  WIOS ').map(e => e.name)).toEqual(['wiosłowanie', 'Wiosłowanie hantlem'])
+    expect(swapCandidates(catalog, new Set(), '  ROW ').map(e => e.name)).toEqual(['cable row', 'Dumbbell row'])
     expect(swapCandidates(catalog, new Set(), 'nothing')).toEqual([])
   })
 

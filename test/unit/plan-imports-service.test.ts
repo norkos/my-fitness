@@ -30,50 +30,50 @@ const press = (sets = 3) => Array.from({ length: sets }, () => ({ weightKg: 12.5
 
 describe('importPlan', () => {
   it('creates new exercises, fills missing videos and creates a draft in row order', () => {
-    const deska = createExercise(t.db, { name: 'Deska', kind: 'timed' }).id
+    const plank = createExercise(t.db, { name: 'Plank', kind: 'timed' }).id
     const draft = importPlan(t.db, {
       date: '2026-11-18',
       sessionType: 'trainer',
       rows: [
-        { newExercise: { name: 'Wyciskanie hantli leżąc', kind: 'weight_reps' }, videoUrl: 'https://example.com/videos/dumbbell-press', sets: press() },
-        { exerciseId: deska, videoUrl: 'https://example.com/videos/plank', sets: [{ durationS: 45 }, { durationS: 45 }, { durationS: 45 }] },
-        { newExercise: { name: 'Wznosy boczne', kind: 'bodyweight' }, sets: [{ reps: 12 }] },
+        { newExercise: { name: 'Dumbbell bench press', kind: 'weight_reps' }, videoUrl: 'https://example.com/videos/dumbbell-press', sets: press() },
+        { exerciseId: plank, videoUrl: 'https://example.com/videos/plank', sets: [{ durationS: 45 }, { durationS: 45 }, { durationS: 45 }] },
+        { newExercise: { name: 'Lateral raise', kind: 'bodyweight' }, sets: [{ reps: 12 }] },
       ],
     })
 
     expect(draft).toMatchObject({ date: '2026-11-18', sessionType: 'trainer', status: 'draft' })
     expect(draft.exercises.map(e => [e.name, e.kind, e.videoUrl, e.sets.length])).toEqual([
-      ['Wyciskanie hantli leżąc', 'weight_reps', 'https://example.com/videos/dumbbell-press', 3],
-      ['Deska', 'timed', 'https://example.com/videos/plank', 3],
-      ['Wznosy boczne', 'bodyweight', null, 1],
+      ['Dumbbell bench press', 'weight_reps', 'https://example.com/videos/dumbbell-press', 3],
+      ['Plank', 'timed', 'https://example.com/videos/plank', 3],
+      ['Lateral raise', 'bodyweight', null, 1],
     ])
     expect(draft.exercises[0]!.sets[0]).toEqual({ weightKg: 12.5, reps: 12, durationS: null, distanceM: null, completed: false })
     expect(listExercises(t.db)).toHaveLength(3)
   })
 
   it('keeps an existing video link', () => {
-    const deska = createExercise(t.db, { name: 'Deska', kind: 'timed', videoUrl: 'https://example.com/videos/mine' }).id
-    importPlan(t.db, { date: '2026-11-18', sessionType: 'solo', rows: [{ exerciseId: deska, videoUrl: 'https://example.com/videos/trainer', sets: [{ durationS: 45 }] }] })
-    expect(getExercise(t.db, deska).videoUrl).toBe('https://example.com/videos/mine')
+    const plank = createExercise(t.db, { name: 'Plank', kind: 'timed', videoUrl: 'https://example.com/videos/mine' }).id
+    importPlan(t.db, { date: '2026-11-18', sessionType: 'solo', rows: [{ exerciseId: plank, videoUrl: 'https://example.com/videos/trainer', sets: [{ durationS: 45 }] }] })
+    expect(getExercise(t.db, plank).videoUrl).toBe('https://example.com/videos/mine')
   })
 
   it('allows planned sets with missing values', () => {
     const draft = importPlan(t.db, {
       date: '2026-11-18',
       sessionType: 'solo',
-      rows: [{ newExercise: { name: 'Rozpiętki', kind: 'weight_reps' }, sets: [{ reps: 16 }] }],
+      rows: [{ newExercise: { name: 'Flyes', kind: 'weight_reps' }, sets: [{ reps: 16 }] }],
     })
     expect(draft.exercises[0]!.sets[0]!.weightKg).toBeNull()
   })
 
   it('creates nothing when a new name already exists', () => {
-    createExercise(t.db, { name: 'Deska', kind: 'timed' })
+    createExercise(t.db, { name: 'Plank', kind: 'timed' })
     const error = failure(() => importPlan(t.db, {
       date: '2026-11-18',
       sessionType: 'solo',
       rows: [
-        { newExercise: { name: 'Przysiad', kind: 'weight_reps' }, sets: press() },
-        { newExercise: { name: ' deska ', kind: 'timed' }, sets: [{ durationS: 45 }] },
+        { newExercise: { name: 'Squat', kind: 'weight_reps' }, sets: press() },
+        { newExercise: { name: ' plank ', kind: 'timed' }, sets: [{ durationS: 45 }] },
       ],
     }))
     expect(error.code).toBe('conflict')
@@ -83,18 +83,18 @@ describe('importPlan', () => {
   })
 
   it('creates nothing when the draft is invalid, and reports errors by row', () => {
-    const id = createExercise(t.db, { name: 'Deska', kind: 'timed' }).id
+    const id = createExercise(t.db, { name: 'Plank', kind: 'timed' }).id
     const error = failure(() => importPlan(t.db, {
       date: '2026-11-18',
       sessionType: 'solo',
       rows: [
-        { newExercise: { name: 'Przysiad', kind: 'weight_reps' }, videoUrl: 'https://example.com/videos/p', sets: press() },
+        { newExercise: { name: 'Squat', kind: 'weight_reps' }, videoUrl: 'https://example.com/videos/p', sets: press() },
         { exerciseId: id, videoUrl: 'https://example.com/videos/d', sets: [{ durationS: -1 }] },
       ],
     }))
     expect(error.code).toBe('validation')
     expect(error.fieldErrors).toEqual({ 'rows.1.sets.0.durationS': 'Duration cannot be negative' })
-    expect(listExercises(t.db).map(e => [e.name, e.videoUrl])).toEqual([['Deska', null]])
+    expect(listExercises(t.db).map(e => [e.name, e.videoUrl])).toEqual([['Plank', null]])
   })
 
   it('validates the review payload', () => {
@@ -109,7 +109,7 @@ describe('importPlan', () => {
   })
 
   it('links two rows to the same exercise only once', () => {
-    const id = createExercise(t.db, { name: 'Deska', kind: 'timed' }).id
+    const id = createExercise(t.db, { name: 'Plank', kind: 'timed' }).id
     const error = failure(() => importPlan(t.db, {
       date: '2026-11-18',
       sessionType: 'solo',

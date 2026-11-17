@@ -40,11 +40,11 @@ test.beforeEach(async ({ page }) => {
 
 test('imports the trainer PDF into a draft, matching known exercises and linking one by hand', async ({ page }) => {
   const csp = watchCsp(page)
-  // "Deska" is in the catalog (maybe from an earlier run), so the PDF row matches it.
-  const deska = await page.request.post('/api/exercises', { data: { name: 'Deska', kind: 'timed' } })
-  expect([201, 409]).toContain(deska.status())
-  const lateralRaise = unique('Wznosy bokiem')
-  await createExercise(page, lateralRaise, 'weight_reps')
+  // "Plank" is in the catalog (maybe from an earlier run), so the PDF row matches it.
+  const plank = await page.request.post('/api/exercises', { data: { name: 'Plank', kind: 'timed' } })
+  expect([201, 409]).toContain(plank.status())
+  const sideLateralRaise = unique('Side lateral raise')
+  await createExercise(page, sideLateralRaise, 'weight_reps')
   const plannedBefore = await page.getByTestId('planned-item').count()
 
   await page.getByTestId('import-plan').click()
@@ -54,13 +54,13 @@ test('imports the trainer PDF into a draft, matching known exercises and linking
   const rows = page.getByTestId('import-row')
   await expect(rows).toHaveCount(8)
   await expect(page.getByTestId('import-row-name')).toHaveText([
-    'Wyciskanie hantli leżąc',
-    'Wiosłowanie hantlem w opadzie',
-    'Rozpiętki na ławce płaskiej',
-    'Wykroki z hantlami',
-    'Wznosy boczne',
-    'Uginanie przedramion z hantlami',
-    'Deska',
+    'Dumbbell bench press',
+    'Bent-over dumbbell row',
+    'Flat bench flyes',
+    'Dumbbell lunges',
+    'Lateral raise',
+    'Dumbbell curl',
+    'Plank',
     "Russian twist's",
   ])
   await expect(rows.nth(0).getByTestId('import-row-plan')).toHaveText('4 x 10 @ 12.5 kg')
@@ -79,7 +79,7 @@ test('imports the trainer PDF into a draft, matching known exercises and linking
   if (await lateral.getAttribute('data-match') === 'new') {
     await expect(lateral.getByTestId('import-row-kind')).toHaveValue('weight_reps')
     await lateral.getByTestId('import-row-link').click()
-    await lateral.getByTestId('import-row-exercise').selectOption({ label: lateralRaise })
+    await lateral.getByTestId('import-row-exercise').selectOption({ label: sideLateralRaise })
   }
   const twist = rows.nth(7)
   if (await twist.getAttribute('data-match') === 'new') {

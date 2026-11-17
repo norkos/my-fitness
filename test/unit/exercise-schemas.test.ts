@@ -33,8 +33,8 @@ describe('exerciseNameKey', () => {
   })
 
   it('treats composed and decomposed accents as the same name', () => {
-    const composed = 'Wyciskanie leżąc'
-    const decomposed = 'Wyciskanie leżąc'
+    const composed = 'Pli\u00E9 squat'
+    const decomposed = 'Plie\u0301 squat'
     expect(composed).not.toBe(decomposed)
     expect(exerciseNameKey(decomposed)).toBe(exerciseNameKey(composed))
   })
@@ -73,7 +73,7 @@ describe('updateExerciseSchema', () => {
 })
 
 describe('video link', () => {
-  const create = (videoUrl: unknown) => createExerciseSchema.safeParse({ name: 'Deska', kind: 'timed', videoUrl })
+  const create = (videoUrl: unknown) => createExerciseSchema.safeParse({ name: 'Plank', kind: 'timed', videoUrl })
 
   it('accepts an https link and trims it', () => {
     const result = create('  https://example.com/videos/plank ')
@@ -83,7 +83,7 @@ describe('video link', () => {
   it('treats an empty string as no video and allows omitting it', () => {
     expect(create('').data?.videoUrl).toBeNull()
     expect(create(null).data?.videoUrl).toBeNull()
-    expect(createExerciseSchema.parse({ name: 'Deska', kind: 'timed' }).videoUrl).toBeUndefined()
+    expect(createExerciseSchema.parse({ name: 'Plank', kind: 'timed' }).videoUrl).toBeUndefined()
   })
 
   it('rejects unsafe or non-https links', () => {

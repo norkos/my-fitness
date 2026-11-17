@@ -134,7 +134,7 @@ describe('updateExercise', () => {
 
 describe('video link', () => {
   it('is stored on create and can be changed and removed', () => {
-    const ex = createExercise(t.db, { name: 'Deska', kind: 'timed', videoUrl: 'https://example.com/videos/plank' })
+    const ex = createExercise(t.db, { name: 'Plank', kind: 'timed', videoUrl: 'https://example.com/videos/plank' })
     expect(ex.videoUrl).toBe('https://example.com/videos/plank')
     expect(updateExercise(t.db, ex.id, { videoUrl: 'https://example.com/videos/abc' }).videoUrl).toBe('https://example.com/videos/abc')
     expect(updateExercise(t.db, ex.id, { videoUrl: '' }).videoUrl).toBeNull()
@@ -155,7 +155,7 @@ describe('video link', () => {
 
 describe('kind of a planned exercise', () => {
   it('can change while the exercise is only in a draft, and the draft stays editable', () => {
-    const ex = createExercise(t.db, { name: 'Wznosy boczne', kind: 'bodyweight' })
+    const ex = createExercise(t.db, { name: 'Lateral raise', kind: 'bodyweight' })
     const draft = createWorkout(t.db, { date: '2026-11-20', sessionType: 'solo', status: 'draft', exercises: [{ exerciseId: ex.id, sets: [{ reps: 12 }] }] })
     expect(getExercise(t.db, ex.id).used).toBe(false)
 
@@ -165,7 +165,7 @@ describe('kind of a planned exercise', () => {
   })
 
   it('is fixed once a done workout contains the exercise', () => {
-    const ex = createExercise(t.db, { name: 'Deska', kind: 'timed' })
+    const ex = createExercise(t.db, { name: 'Plank', kind: 'timed' })
     createWorkout(t.db, { date: '2026-11-01', sessionType: 'solo', exercises: [{ exerciseId: ex.id, sets: [{ durationS: 45 }] }] })
     expect(getExercise(t.db, ex.id).used).toBe(true)
     expectServiceError(() => updateExercise(t.db, ex.id, { kind: 'cardio' }), 'conflict', 'kind')
