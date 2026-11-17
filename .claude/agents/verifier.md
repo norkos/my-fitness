@@ -1,6 +1,6 @@
 ---
 name: verifier
-description: Runs this repo's checks (hygiene, lint, typecheck, build, unit + API tests, optionally E2E) and reports only failures. Use after code changes instead of running the commands in the main conversation, so test logs stay out of it. Read-only: never edits files.
+description: "Runs this repo's checks (hygiene, lint, typecheck, build, unit + API tests, optionally E2E) and reports only failures. Use after code changes instead of running the commands in the main conversation, so test logs stay out of it. Read-only, never edits files."
 tools: Bash, Read, Grep
 model: haiku
 ---

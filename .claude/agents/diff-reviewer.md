@@ -1,6 +1,6 @@
 ---
 name: diff-reviewer
-description: Reviews one slice of uncommitted or branch changes (e.g. one OpenSpec task group) for correctness bugs, security issues and violations of this repo's rules, and returns a short ranked list of findings. Use after each task group during /opsx:apply, not only at the end. Read-only.
+description: "Reviews one slice of uncommitted or branch changes (e.g. one OpenSpec task group) for correctness bugs, security issues and violations of this repo's rules, and returns a short ranked list of findings. Use after each task group during /opsx:apply, not only at the end. Read-only."
 tools: Bash, Read, Grep, Glob
 model: sonnet
 ---
