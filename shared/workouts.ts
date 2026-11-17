@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { KIND_DEFINITIONS, SESSION_TYPES, SET_FIELDS, type ExerciseKind, type SessionType, type SetField } from './kinds'
+import { KIND_DEFINITIONS, SESSION_TYPES, SET_FIELDS, WORKOUT_STATUSES, type ExerciseKind, type SessionType, type SetField, type WorkoutStatus } from './kinds'
 import { toFieldErrors, type FieldErrors } from './validation'
 
 export interface SetValues {
@@ -9,16 +9,22 @@ export interface SetValues {
   distanceM: number | null
 }
 
+/** A set as stored in a workout: its values plus whether it was performed (relevant while a draft). */
+export interface WorkoutSet extends SetValues {
+  completed: boolean
+}
+
 export interface WorkoutInput {
   date: string
   sessionType: SessionType
-  exercises: Array<{ exerciseId: number, sets: SetValues[] }>
+  exercises: Array<{ exerciseId: number, sets: WorkoutSet[] }>
 }
 
 export interface WorkoutSummary {
   id: number
   date: string
   sessionType: SessionType
+  status: WorkoutStatus
   exerciseCount: number
 }
 
@@ -26,13 +32,15 @@ export interface WorkoutExerciseDetail {
   exerciseId: number
   name: string
   kind: ExerciseKind
-  sets: SetValues[]
+  videoUrl: string | null
+  sets: WorkoutSet[]
 }
 
 export interface WorkoutDetail {
   id: number
   date: string
   sessionType: SessionType
+  status: WorkoutStatus
   exercises: WorkoutExerciseDetail[]
 }
 
@@ -62,6 +70,7 @@ const setSchema = z.object({
   reps: fieldSchema('reps'),
   durationS: fieldSchema('durationS'),
   distanceM: fieldSchema('distanceM'),
+  completed: z.boolean({ error: 'Completed must be true or false' }).optional(),
 })
 
 export function isValidIsoDate(value: string): boolean {
@@ -74,6 +83,8 @@ export const isoDateSchema = z.string({ error: 'Date is required' }).refine(isVa
 
 export const MAX_EXERCISES_PER_WORKOUT = 30
 export const MAX_SETS_PER_EXERCISE = 30
+
+export const workoutStatusSchema = z.enum(WORKOUT_STATUSES, { error: 'Choose draft or done' })
 
 export const workoutStructureSchema = z.object({
   date: isoDateSchema,
@@ -94,11 +105,21 @@ export type WorkoutValidationResult =
   | { success: true, data: WorkoutInput }
   | { success: false, fieldErrors: FieldErrors }
 
+export interface ValidateWorkoutOptions {
+  /** Drafts may leave required values empty; every other rule applies to both. Defaults to done. */
+  mode?: WorkoutStatus
+}
+
 /**
  * Validates a workout payload. `kindOf` returns the kind of an exercise id, or undefined if it does not exist.
- * Values for fields that the exercise kind does not record are dropped.
+ * Values for fields that the exercise kind does not record are dropped. Sets of a done workout are always
+ * completed; in a draft a set is completed only when marked so.
  */
-export function validateWorkout(input: unknown, kindOf: (exerciseId: number) => ExerciseKind | undefined): WorkoutValidationResult {
+export function validateWorkout(
+  input: unknown,
+  kindOf: (exerciseId: number) => ExerciseKind | undefined,
+  { mode = 'done' }: ValidateWorkoutOptions = {},
+): WorkoutValidationResult {
   const parsed = workoutStructureSchema.safeParse(input)
   if (!parsed.success) return { success: false, fieldErrors: toFieldErrors(parsed.error) }
 
@@ -121,12 +142,12 @@ export function validateWorkout(input: unknown, kindOf: (exerciseId: number) => 
     const def = KIND_DEFINITIONS[kind]
     const allowed = new Set<SetField>([...def.required, ...def.optional])
     const sets = entry.sets.map((set, j) => {
-      for (const field of def.required) {
+      for (const field of mode === 'draft' ? [] : def.required) {
         if (set[field] === null || set[field] === undefined) {
           fieldErrors[`exercises.${i}.sets.${j}.${field}`] = `${FIELD_LIMITS[field].label} is required`
         }
       }
-      const normalized = {} as SetValues
+      const normalized = { completed: mode === 'done' ? true : (set.completed ?? false) } as WorkoutSet
       for (const field of SET_FIELDS) {
         normalized[field] = allowed.has(field) ? (set[field] ?? null) : null
       }

@@ -4,28 +4,12 @@ import type { WorkoutDetail } from '#shared/workouts'
 
 const route = useRoute()
 const api = useApi()
-const toast = useToast()
 
 const { data: workout, error } = await useAsyncData(`workout-${route.params.id}`, () => api<WorkoutDetail>(`/api/workouts/${route.params.id}`))
 
-const confirmOpen = ref(false)
-const deleting = ref(false)
-
-async function remove() {
-  deleting.value = true
-  try {
-    await api(`/api/workouts/${route.params.id}`, { method: 'DELETE' })
-    confirmOpen.value = false
-    toast.add({ title: 'Workout deleted', color: 'success' })
-    await refreshNuxtData('workouts')
-    await navigateTo('/', { replace: true })
-  }
-  catch (e) {
-    toast.add({ title: apiErrorMessage(e, 'Could not delete the workout'), color: 'error' })
-  }
-  finally {
-    deleting.value = false
-  }
+// A planned workout has no results to show yet; it is viewed and changed in its editor.
+if (workout.value?.status === 'draft') {
+  await navigateTo(`/workouts/${workout.value.id}/edit`, { replace: true })
 }
 </script>
 
@@ -44,11 +28,14 @@ async function remove() {
       <ul class="space-y-3">
         <li v-for="entry in workout.exercises" :key="entry.exerciseId" data-testid="workout-view-entry">
           <UCard :ui="{ body: 'p-3 sm:p-4' }">
-            <NuxtLink :to="`/exercises/${entry.exerciseId}`" class="flex items-center gap-2 font-medium" data-testid="workout-view-exercise">
-              <span class="truncate">{{ entry.name }}</span>
-              <KindBadge :kind="entry.kind" />
-              <UIcon name="i-lucide-trending-up" class="ml-auto text-muted" />
-            </NuxtLink>
+            <div class="flex items-center gap-1">
+              <NuxtLink :to="`/exercises/${entry.exerciseId}`" class="flex flex-1 min-w-0 items-center gap-2 font-medium" data-testid="workout-view-exercise">
+                <span class="truncate">{{ entry.name }}</span>
+                <KindBadge :kind="entry.kind" />
+                <UIcon name="i-lucide-trending-up" class="ml-auto text-muted" />
+              </NuxtLink>
+              <VideoLink :url="entry.videoUrl" :name="entry.name" />
+            </div>
             <ol class="mt-2 space-y-1 text-sm">
               <li v-for="(set, j) in entry.sets" :key="j" class="flex gap-2" data-testid="workout-view-set">
                 <span class="w-5 text-right text-muted">{{ j + 1 }}</span>
@@ -63,19 +50,8 @@ async function remove() {
         <UButton :to="`/workouts/${workout.id}/edit`" icon="i-lucide-pencil" variant="outline" color="neutral" block size="lg" data-testid="workout-edit">
           Edit
         </UButton>
-        <UButton icon="i-lucide-trash-2" variant="outline" color="error" block size="lg" data-testid="workout-delete" @click="confirmOpen = true">
-          Delete
-        </UButton>
+        <WorkoutDeleteButton :workout-id="workout.id" />
       </div>
-
-      <UModal v-model:open="confirmOpen" title="Delete this workout?" description="All its exercises and sets will be removed." :ui="{ content: 'max-w-sm' }">
-        <template #footer>
-          <div class="flex w-full gap-2">
-            <UButton variant="outline" color="neutral" block data-testid="delete-cancel" @click="confirmOpen = false">Cancel</UButton>
-            <UButton color="error" block :loading="deleting" data-testid="delete-confirm" @click="remove">Delete</UButton>
-          </div>
-        </template>
-      </UModal>
     </template>
   </div>
 </template>

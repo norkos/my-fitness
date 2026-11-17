@@ -1,16 +1,9 @@
-import { expect, test, type Page } from '@playwright/test'
-import { createExercise, createWorkout, expectNoHorizontalScroll, loginAndWaitForHome, unique } from './helpers'
+import { expect, test } from '@playwright/test'
+import { createExercise, createWorkout, expectNoHorizontalScroll, loginAndWaitForHome, pickExercise, unique } from './helpers'
 
 test.beforeEach(async ({ page }) => {
   await loginAndWaitForHome(page)
 })
-
-async function pickExercise(page: Page, name: string) {
-  await page.getByTestId('exercise-picker').selectOption({ label: name })
-  const entry = page.getByTestId('workout-entry').filter({ has: page.getByTestId('entry-name').getByText(name, { exact: true }) })
-  await expect(entry).toBeVisible()
-  return entry
-}
 
 test('logs a trainer workout, then pre-fills last-time values next time', async ({ page }) => {
   const bench = unique('Bench')

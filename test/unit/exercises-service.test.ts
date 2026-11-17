@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import { ServiceError } from '../../server/lib/errors'
 import { createExercise, getExercise, listExercises, updateExercise, withUniqueName } from '../../server/services/exercises'
+import { createWorkout, replaceWorkout } from '../../server/services/workouts'
 import { createTempDb, type TempDb } from './helpers/db'
 import { insertRawUsage } from './helpers/fixtures'
 
@@ -128,5 +129,60 @@ describe('updateExercise', () => {
     const ex = createExercise(t.db, { name: 'Plank', kind: 'timed' })
     expectServiceError(() => updateExercise(t.db, ex.id, {}), 'validation')
     expectServiceError(() => updateExercise(t.db, 999, { name: 'X' }), 'not_found')
+  })
+})
+
+describe('video link', () => {
+  it('is stored on create and can be changed and removed', () => {
+    const ex = createExercise(t.db, { name: 'Deska', kind: 'timed', videoUrl: 'https://example.com/videos/plank' })
+    expect(ex.videoUrl).toBe('https://example.com/videos/plank')
+    expect(updateExercise(t.db, ex.id, { videoUrl: 'https://example.com/videos/abc' }).videoUrl).toBe('https://example.com/videos/abc')
+    expect(updateExercise(t.db, ex.id, { videoUrl: '' }).videoUrl).toBeNull()
+  })
+
+  it('defaults to none and keeps the video when only the name changes', () => {
+    const ex = createExercise(t.db, { name: 'Plank', kind: 'timed' })
+    expect(ex.videoUrl).toBeNull()
+    updateExercise(t.db, ex.id, { videoUrl: 'https://example.com/videos/abc' })
+    expect(updateExercise(t.db, ex.id, { name: 'Front plank' }).videoUrl).toBe('https://example.com/videos/abc')
+  })
+
+  it('rejects an unsafe link', () => {
+    const ex = createExercise(t.db, { name: 'Plank', kind: 'timed' })
+    expectServiceError(() => updateExercise(t.db, ex.id, { videoUrl: 'javascript:alert(1)' }), 'validation', 'videoUrl')
+  })
+})
+
+describe('kind of a planned exercise', () => {
+  it('can change while the exercise is only in a draft, and the draft stays editable', () => {
+    const ex = createExercise(t.db, { name: 'Wznosy boczne', kind: 'bodyweight' })
+    const draft = createWorkout(t.db, { date: '2026-11-20', sessionType: 'solo', status: 'draft', exercises: [{ exerciseId: ex.id, sets: [{ reps: 12 }] }] })
+    expect(getExercise(t.db, ex.id).used).toBe(false)
+
+    expect(updateExercise(t.db, ex.id, { kind: 'weight_reps' }).kind).toBe('weight_reps')
+    const edited = replaceWorkout(t.db, draft.id, { date: '2026-11-20', sessionType: 'solo', exercises: [{ exerciseId: ex.id, sets: [{ weightKg: 5, reps: 12 }] }] })
+    expect(edited.exercises[0]).toMatchObject({ kind: 'weight_reps', sets: [{ weightKg: 5, reps: 12 }] })
+  })
+
+  it('is fixed once a done workout contains the exercise', () => {
+    const ex = createExercise(t.db, { name: 'Deska', kind: 'timed' })
+    createWorkout(t.db, { date: '2026-11-01', sessionType: 'solo', exercises: [{ exerciseId: ex.id, sets: [{ durationS: 45 }] }] })
+    expect(getExercise(t.db, ex.id).used).toBe(true)
+    expectServiceError(() => updateExercise(t.db, ex.id, { kind: 'cardio' }), 'conflict', 'kind')
+  })
+})
+
+describe('lastDoneOn', () => {
+  it('is the latest done workout date and ignores drafts', () => {
+    const plank = createExercise(t.db, { name: 'Plank', kind: 'timed' })
+    const never = createExercise(t.db, { name: 'Row', kind: 'cardio' })
+    const entry = { exerciseId: plank.id, sets: [{ durationS: 45 }] }
+    createWorkout(t.db, { date: '2026-11-01', sessionType: 'solo', exercises: [entry] })
+    createWorkout(t.db, { date: '2026-11-08', sessionType: 'solo', exercises: [entry] })
+    createWorkout(t.db, { date: '2026-11-20', sessionType: 'solo', status: 'draft', exercises: [entry] })
+
+    expect(getExercise(t.db, plank.id).lastDoneOn).toBe('2026-11-08')
+    expect(listExercises(t.db).map(e => [e.name, e.lastDoneOn])).toEqual([['Plank', '2026-11-08'], ['Row', null]])
+    expect(getExercise(t.db, never.id).lastDoneOn).toBeNull()
   })
 })

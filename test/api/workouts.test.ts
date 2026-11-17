@@ -76,7 +76,7 @@ describe('workouts API', () => {
     expect(edited.status).toBe(200)
     expect(edited.body.sessionType).toBe('solo')
     expect(edited.body.exercises).toHaveLength(1)
-    expect(edited.body.exercises[0].sets).toEqual([{ weightKg: 50, reps: 8, durationS: null, distanceM: null }])
+    expect(edited.body.exercises[0].sets).toEqual([{ weightKg: 50, reps: 8, durationS: null, distanceM: null, completed: true }])
 
     const invalidEdit = await app.request(`/api/workouts/${created.id}`, { method: 'PUT', cookie, body: { date: 'nope', sessionType: 'solo', exercises: [] } })
     expect(invalidEdit.status).toBe(400)
@@ -91,6 +91,73 @@ describe('workouts API', () => {
     expect((await app.request('/api/workouts/x', { cookie })).status).toBe(404)
     expect((await app.request('/api/workouts/9999', { method: 'DELETE', cookie })).status).toBe(404)
     expect((await app.request('/api/workouts/9999', { method: 'PUT', cookie, body: trainerSession('2026-11-15') })).status).toBe(404)
+  })
+
+  it('plans a draft, saves gym progress and finishes it', async () => {
+    const created = await create({
+      date: '2026-11-20',
+      sessionType: 'trainer',
+      status: 'draft',
+      exercises: [
+        { exerciseId: bench, sets: [{ weightKg: 12.5, reps: 12 }, { reps: 12 }] },
+        { exerciseId: plank, sets: [{ durationS: 45 }] },
+      ],
+    })
+    expect(created.status).toBe(201)
+    expect(created.body.status).toBe('draft')
+    const id = created.body.id
+
+    const listed = (await app.request('/api/workouts', { cookie })).body.find((w: any) => w.id === id)
+    expect(listed.status).toBe('draft')
+
+    const saved = await app.request(`/api/workouts/${id}`, {
+      method: 'PUT',
+      cookie,
+      body: {
+        date: '2026-11-20',
+        sessionType: 'trainer',
+        exercises: [
+          { exerciseId: bench, sets: [{ weightKg: 12.5, reps: 10, completed: true }, { reps: 12 }] },
+          { exerciseId: plank, sets: [{ durationS: 45 }] },
+        ],
+      },
+    })
+    expect(saved.status).toBe(200)
+    expect(saved.body.status).toBe('draft')
+
+    const finished = await app.request(`/api/workouts/${id}/finish`, { method: 'POST', cookie })
+    expect(finished.status).toBe(200)
+    expect(finished.body.status).toBe('done')
+    expect(finished.body.exercises.map((e: any) => [e.name, e.sets.map((s: any) => s.reps)])).toEqual([['Bench press', [10]]])
+
+    const again = await app.request(`/api/workouts/${id}/finish`, { method: 'POST', cookie })
+    expect(again.status).toBe(409)
+
+    // A gym-mode save arriving after finishing must not turn planned sets into done ones
+    const late = await app.request(`/api/workouts/${id}`, {
+      method: 'PUT',
+      cookie,
+      body: {
+        date: '2026-11-20',
+        sessionType: 'trainer',
+        expectedStatus: 'draft',
+        exercises: [{ exerciseId: bench, sets: [{ weightKg: 12.5, reps: 10, completed: true }, { weightKg: 12.5, reps: 12 }] }],
+      },
+    })
+    expect(late.status).toBe(409)
+    expect(late.body.message).toBe('This workout has already been finished')
+    const stored = (await app.request(`/api/workouts/${id}`, { cookie })).body
+    expect(stored.exercises[0].sets).toHaveLength(1)
+    await app.request(`/api/workouts/${id}`, { method: 'DELETE', cookie })
+  })
+
+  it('refuses to finish a draft with nothing done', async () => {
+    const id = (await create({ date: '2026-11-21', sessionType: 'solo', status: 'draft', exercises: [{ exerciseId: plank, sets: [{ durationS: 45 }] }] })).body.id
+    const res = await app.request(`/api/workouts/${id}/finish`, { method: 'POST', cookie })
+    expect(res.status).toBe(400)
+    expect(res.body.data.fieldErrors).toEqual({ _: 'Mark at least one set as done before finishing' })
+    expect((await app.request(`/api/workouts/9999/finish`, { method: 'POST', cookie })).status).toBe(404)
+    await app.request(`/api/workouts/${id}`, { method: 'DELETE', cookie })
   })
 
   it('marks exercises as used once logged', async () => {
