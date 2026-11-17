@@ -58,4 +58,11 @@ export function toIsoDate(date: Date): string {
   return `${y}-${m}-${d}`
 }
 
+/** Tomorrow's local calendar day, the default date for a planned workout. */
+export function tomorrowIsoDate(now: Date = new Date()): string {
+  const next = new Date(now)
+  next.setDate(next.getDate() + 1)
+  return toIsoDate(next)
+}
+
 export const SESSION_LABELS: Record<SessionType, string> = { solo: 'Solo', trainer: 'Trainer' }

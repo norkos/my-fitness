@@ -24,3 +24,7 @@ export function fieldsForKind(kind: ExerciseKind): SetField[] {
   const def = KIND_DEFINITIONS[kind]
   return [...def.required, ...def.optional]
 }
+
+/** A draft is a planned workout that has not been performed yet; only done workouts count as history. */
+export const WORKOUT_STATUSES = ['draft', 'done'] as const
+export type WorkoutStatus = (typeof WORKOUT_STATUSES)[number]

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { createExerciseSchema, exerciseNameKey, updateExerciseSchema } from '../../shared/exercises'
+import { createExerciseSchema, exerciseNameKey, isHttpsUrl, updateExerciseSchema } from '../../shared/exercises'
 import { EXERCISE_KINDS, fieldsForKind, KIND_DEFINITIONS } from '../../shared/kinds'
 import { toFieldErrors } from '../../shared/validation'
 
@@ -33,8 +33,8 @@ describe('exerciseNameKey', () => {
   })
 
   it('treats composed and decomposed accents as the same name', () => {
-    const composed = 'Wyciskanie leżąc'
-    const decomposed = 'Wyciskanie leżąc'
+    const composed = 'Pli\u00E9 squat'
+    const decomposed = 'Plie\u0301 squat'
     expect(composed).not.toBe(decomposed)
     expect(exerciseNameKey(decomposed)).toBe(exerciseNameKey(composed))
   })
@@ -69,5 +69,42 @@ describe('updateExerciseSchema', () => {
     const result = updateExerciseSchema.safeParse({})
     expect(result.success).toBe(false)
     expect(toFieldErrors(result.error!)).toEqual({ _: 'Nothing to update' })
+  })
+})
+
+describe('video link', () => {
+  const create = (videoUrl: unknown) => createExerciseSchema.safeParse({ name: 'Plank', kind: 'timed', videoUrl })
+
+  it('accepts an https link and trims it', () => {
+    const result = create('  https://example.com/videos/plank ')
+    expect(result.success && result.data.videoUrl).toBe('https://example.com/videos/plank')
+  })
+
+  it('treats an empty string as no video and allows omitting it', () => {
+    expect(create('').data?.videoUrl).toBeNull()
+    expect(create(null).data?.videoUrl).toBeNull()
+    expect(createExerciseSchema.parse({ name: 'Plank', kind: 'timed' }).videoUrl).toBeUndefined()
+  })
+
+  it('rejects unsafe or non-https links', () => {
+    for (const bad of ['javascript:alert(1)', 'http://example.com/video', 'www.example.com/video', 'https://', 42]) {
+      const result = create(bad)
+      expect(result.success).toBe(false)
+      expect(toFieldErrors(result.error!)).toEqual({ videoUrl: 'Enter an https:// link' })
+    }
+  })
+
+  it('rejects links over 2048 characters', () => {
+    const result = create(`https://example.com/${'a'.repeat(2048)}`)
+    expect(toFieldErrors(result.error!)).toEqual({ videoUrl: 'Link is too long' })
+  })
+
+  it('counts a video change as an update on its own', () => {
+    expect(updateExerciseSchema.safeParse({ videoUrl: '' }).success).toBe(true)
+  })
+
+  it('checks https URLs', () => {
+    expect(isHttpsUrl('https://example.com/videos/x')).toBe(true)
+    expect(isHttpsUrl('not a url')).toBe(false)
   })
 })

@@ -47,6 +47,18 @@ describe('getExerciseProgress', () => {
     expect(points[2]!.sets.map(s => [s.weightKg, s.reps])).toEqual([[55, 5], [55, 6]])
   })
 
+  it('excludes drafts from the chart and the history', () => {
+    createWorkout(t.db, benchWorkout('2026-11-01', [[45, 8]]))
+    createWorkout(t.db, benchWorkout('2026-11-05', [[50, 8]]))
+    createWorkout(t.db, { ...benchWorkout('2026-11-09', [[60, 8]]), status: 'draft' })
+    expect(getExerciseProgress(t.db, bench).points.map(p => p.date)).toEqual(['2026-11-01', '2026-11-05'])
+  })
+
+  it('shows no history for an exercise that is only planned', () => {
+    createWorkout(t.db, { ...benchWorkout('2026-11-09', [[60, 8]]), status: 'draft' })
+    expect(getExerciseProgress(t.db, bench).points).toEqual([])
+  })
+
   it('reflects edits and deletions', () => {
     const typo = createWorkout(t.db, benchWorkout('2026-11-01', [[500, 8]]))
     const other = createWorkout(t.db, benchWorkout('2026-11-05', [[50, 8]]))

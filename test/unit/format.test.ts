@@ -8,6 +8,7 @@ import {
   formatSets,
   formatShortDate,
   toIsoDate,
+  tomorrowIsoDate,
 } from '../../shared/format'
 import { draftToValues, EMPTY_SET_DRAFT, fieldUnit, isFieldRequired, usesMinutes, valuesToDraft } from '../../shared/set-form'
 
@@ -62,6 +63,8 @@ describe('formatting', () => {
 
   it('converts a local date to YYYY-MM-DD', () => {
     expect(toIsoDate(new Date(2026, 0, 5, 23, 30))).toBe('2026-01-05')
+    expect(tomorrowIsoDate(new Date(2026, 0, 31, 23, 30))).toBe('2026-02-01')
+    expect(tomorrowIsoDate(new Date(2026, 11, 31, 8, 0))).toBe('2027-01-01')
   })
 })
 

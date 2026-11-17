@@ -95,6 +95,21 @@ describe('exercises API', () => {
     expect(renamed.body).toMatchObject({ name: 'Pull-ups', kind: 'bodyweight', used: true })
   })
 
+  it('sets, returns and clears a video link', async () => {
+    const created = await post({ name: 'Side plank', kind: 'timed', videoUrl: 'https://example.com/videos/plank' })
+    expect(created.status).toBe(201)
+    expect(created.body).toMatchObject({ videoUrl: 'https://example.com/videos/plank', lastDoneOn: null })
+
+    const listed = (await app.request('/api/exercises', { cookie })).body.find((e: any) => e.id === created.body.id)
+    expect(listed.videoUrl).toBe('https://example.com/videos/plank')
+
+    const bad = await patch(created.body.id, { videoUrl: 'javascript:alert(1)' })
+    expect(bad.status).toBe(400)
+    expect(bad.body.data.fieldErrors).toEqual({ videoUrl: 'Enter an https:// link' })
+
+    expect((await patch(created.body.id, { videoUrl: '' })).body.videoUrl).toBeNull()
+  })
+
   it('returns 404 when patching an unknown exercise', async () => {
     expect((await patch(9999, { name: 'Nope' })).status).toBe(404)
   })

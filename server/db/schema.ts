@@ -1,11 +1,12 @@
 import { index, integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
-import { EXERCISE_KINDS, SESSION_TYPES } from '../../shared/kinds'
+import { EXERCISE_KINDS, SESSION_TYPES, WORKOUT_STATUSES } from '../../shared/kinds'
 
 export const exercises = sqliteTable('exercises', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   name: text('name').notNull(),
   nameKey: text('name_key').notNull().unique(),
   kind: text('kind', { enum: EXERCISE_KINDS }).notNull(),
+  videoUrl: text('video_url'),
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
 })
 
@@ -13,9 +14,13 @@ export const workouts = sqliteTable('workouts', {
   id: integer('id').primaryKey({ autoIncrement: true }),
   date: text('date').notNull(),
   sessionType: text('session_type', { enum: SESSION_TYPES }).notNull(),
+  status: text('status', { enum: WORKOUT_STATUSES }).notNull().default('done'),
   createdAt: integer('created_at', { mode: 'timestamp_ms' }).notNull(),
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }).notNull(),
-}, t => [index('workouts_date_idx').on(t.date)])
+}, t => [
+  index('workouts_date_idx').on(t.date),
+  index('workouts_status_date_idx').on(t.status, t.date),
+])
 
 export const workoutExercises = sqliteTable('workout_exercises', {
   id: integer('id').primaryKey({ autoIncrement: true }),
@@ -35,4 +40,6 @@ export const sets = sqliteTable('sets', {
   reps: integer('reps'),
   durationS: integer('duration_s'),
   distanceM: integer('distance_m'),
+  /** Whether the set was performed; only meaningful while the workout is a draft. */
+  completed: integer('completed', { mode: 'boolean' }).notNull().default(true),
 }, t => [index('sets_workout_exercise_idx').on(t.workoutExerciseId)])

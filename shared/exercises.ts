@@ -11,17 +11,43 @@ export const exerciseNameSchema = z
 
 export const exerciseKindSchema = z.enum(EXERCISE_KINDS, { error: 'Choose a valid kind' })
 
+export const VIDEO_URL_MAX = 2048
+const VIDEO_URL_MESSAGE = 'Enter an https:// link'
+
+/** True for an absolute https URL with a host; anything else (javascript:, http:, relative) is rejected. */
+export function isHttpsUrl(value: string): boolean {
+  try {
+    const url = new URL(value)
+    return url.protocol === 'https:' && url.hostname !== ''
+  }
+  catch {
+    return false
+  }
+}
+
+/** Optional video link: an https URL, or null. An empty string clears the link. */
+export const videoUrlSchema = z.preprocess(
+  v => (typeof v === 'string' && v.trim() === '' ? null : v),
+  z.string({ error: VIDEO_URL_MESSAGE })
+    .trim()
+    .max(VIDEO_URL_MAX, 'Link is too long')
+    .refine(isHttpsUrl, VIDEO_URL_MESSAGE)
+    .nullable(),
+)
+
 export const createExerciseSchema = z.object({
   name: exerciseNameSchema,
   kind: exerciseKindSchema,
+  videoUrl: videoUrlSchema.optional(),
 })
 
 export const updateExerciseSchema = z
   .object({
     name: exerciseNameSchema.optional(),
     kind: exerciseKindSchema.optional(),
+    videoUrl: videoUrlSchema.optional(),
   })
-  .refine(v => v.name !== undefined || v.kind !== undefined, { message: 'Nothing to update' })
+  .refine(v => v.name !== undefined || v.kind !== undefined || v.videoUrl !== undefined, { message: 'Nothing to update' })
 
 export type CreateExerciseInput = z.infer<typeof createExerciseSchema>
 export type UpdateExerciseInput = z.infer<typeof updateExerciseSchema>
@@ -36,6 +62,10 @@ export interface Exercise {
   id: number
   name: string
   kind: ExerciseKind
-  /** True once the exercise appears in any workout (its kind is then fixed). */
+  /** Optional https link to a video showing the exercise. */
+  videoUrl: string | null
+  /** True once the exercise appears in a done workout (its kind is then fixed); planned workouts don't count. */
   used: boolean
+  /** Date of the latest done workout containing the exercise, or null if it was never done. */
+  lastDoneOn: string | null
 }

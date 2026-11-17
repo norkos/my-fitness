@@ -25,17 +25,48 @@ describe('validateWorkout: valid input', () => {
     ]), kindOf)
     expect(result.success).toBe(true)
     if (!result.success) return
-    expect(result.data.exercises[0]!.sets[1]).toEqual({ weightKg: 52.5, reps: 6, durationS: null, distanceM: null })
-    expect(result.data.exercises[3]!.sets[1]).toEqual({ weightKg: null, reps: null, durationS: 300, distanceM: null })
+    expect(result.data.exercises[0]!.sets[1]).toEqual({ weightKg: 52.5, reps: 6, durationS: null, distanceM: null, completed: true })
+    expect(result.data.exercises[3]!.sets[1]).toEqual({ weightKg: null, reps: null, durationS: 300, distanceM: null, completed: true })
   })
 
   it('drops values the kind does not record', () => {
     const result = validateWorkout(workout([{ exerciseId: 3, sets: [{ durationS: 30, reps: 5, weightKg: 10 }] }]), kindOf)
-    expect(result.success && result.data.exercises[0]!.sets[0]).toEqual({ weightKg: null, reps: null, durationS: 30, distanceM: null })
+    expect(result.success && result.data.exercises[0]!.sets[0]).toEqual({ weightKg: null, reps: null, durationS: 30, distanceM: null, completed: true })
   })
 
   it('accepts zero as a value', () => {
     expect(validateWorkout(workout([{ exerciseId: 1, sets: [{ weightKg: 0, reps: 10 }] }]), kindOf).success).toBe(true)
+  })
+})
+
+describe('validateWorkout: draft mode', () => {
+  const draft = { mode: 'draft' } as const
+
+  it('accepts sets with missing required values', () => {
+    const result = validateWorkout(workout([{ exerciseId: 1, sets: [{ reps: 12 }] }]), kindOf, draft)
+    expect(result.success && result.data.exercises[0]!.sets[0]).toEqual({ weightKg: null, reps: 12, durationS: null, distanceM: null, completed: false })
+  })
+
+  it('keeps sets marked completed and treats unmarked sets as not completed', () => {
+    const result = validateWorkout(workout([{ exerciseId: 3, sets: [{ durationS: 45, completed: true }, { durationS: 45 }] }]), kindOf, draft)
+    expect(result.success && result.data.exercises[0]!.sets.map(s => s.completed)).toEqual([true, false])
+  })
+
+  it('still rejects negative values, empty exercises and missing sets', () => {
+    const negative = validateWorkout(workout([{ exerciseId: 2, sets: [{ reps: -5 }] }]), kindOf, draft)
+    expect(!negative.success && negative.fieldErrors['exercises.0.sets.0.reps']).toBe('Reps cannot be negative')
+    expect(validateWorkout(workout([]), kindOf, draft).success).toBe(false)
+    expect(validateWorkout(workout([{ exerciseId: 1, sets: [] }]), kindOf, draft).success).toBe(false)
+  })
+
+  it('rejects a non-boolean completed flag', () => {
+    const result = validateWorkout(workout([{ exerciseId: 3, sets: [{ durationS: 45, completed: 'yes' }] }]), kindOf, draft)
+    expect(!result.success && result.fieldErrors['exercises.0.sets.0.completed']).toBe('Completed must be true or false')
+  })
+
+  it('marks every set of a done workout completed', () => {
+    const result = validateWorkout(workout([{ exerciseId: 3, sets: [{ durationS: 45, completed: false }] }]), kindOf)
+    expect(result.success && result.data.exercises[0]!.sets[0]!.completed).toBe(true)
   })
 })
 

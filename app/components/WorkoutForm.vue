@@ -1,30 +1,36 @@
 <script setup lang="ts">
 import type { Exercise } from '#shared/exercises'
-import { formatDate, formatSets, SESSION_LABELS, toIsoDate } from '#shared/format'
-import { fieldsForKind, SESSION_TYPES, type SessionType } from '#shared/kinds'
+import { formatDate, formatSets, SESSION_LABELS, toIsoDate, tomorrowIsoDate } from '#shared/format'
+import { fieldsForKind, SESSION_TYPES, type SessionType, type WorkoutStatus } from '#shared/kinds'
 import { draftToValues, EMPTY_SET_DRAFT, fieldUnit, isFieldRequired, valuesToDraft, type SetDraft } from '#shared/set-form'
 import { validateWorkout, type LastTime, type WorkoutDetail } from '#shared/workouts'
 
-const props = defineProps<{ initial?: WorkoutDetail }>()
+/** `draft` creates a planned workout; when editing, the workout's own status decides. */
+const props = defineProps<{ initial?: WorkoutDetail, draft?: boolean }>()
 
 const api = useApi()
 const toast = useToast()
 
+const mode = computed<WorkoutStatus>(() => props.initial?.status ?? (props.draft ? 'draft' : 'done'))
+
+/** A set's text fields, plus whether it was ticked in gym mode, which editing keeps. */
+type FormSet = SetDraft & { completed?: boolean }
+
 interface EntryDraft {
   key: number
   exerciseId: number
-  sets: SetDraft[]
+  sets: FormSet[]
   last?: LastTime
 }
 
 let nextKey = 0
-const date = ref(props.initial?.date ?? toIsoDate(new Date()))
+const date = ref(props.initial?.date ?? (props.draft ? tomorrowIsoDate() : toIsoDate(new Date())))
 const sessionType = ref<SessionType>(props.initial?.sessionType ?? 'solo')
 const entries = ref<EntryDraft[]>(
   props.initial?.exercises.map(e => ({
     key: nextKey++,
     exerciseId: e.exerciseId,
-    sets: e.sets.map(s => valuesToDraft(e.kind, s)),
+    sets: e.sets.map(s => ({ ...valuesToDraft(e.kind, s), completed: s.completed })),
   })) ?? [],
 )
 const errors = ref<Record<string, string>>({})
@@ -70,7 +76,7 @@ function removeExercise(index: number) {
 
 function addSet(entry: EntryDraft) {
   const previous = entry.sets[entry.sets.length - 1]
-  entry.sets.push(previous ? { ...previous } : { ...EMPTY_SET_DRAFT })
+  entry.sets.push(previous ? { ...previous, completed: false } : { ...EMPTY_SET_DRAFT })
 }
 
 function removeSet(entry: EntryDraft, index: number) {
@@ -84,7 +90,10 @@ function payload() {
     sessionType: sessionType.value,
     exercises: entries.value.map((entry) => {
       const kind = exerciseById.value.get(entry.exerciseId)?.kind ?? 'weight_reps'
-      return { exerciseId: entry.exerciseId, sets: entry.sets.map(s => draftToValues(kind, s)) }
+      return {
+        exerciseId: entry.exerciseId,
+        sets: entry.sets.map(s => ({ ...draftToValues(kind, s), completed: s.completed ?? false })),
+      }
     }),
   }
 }
@@ -102,7 +111,7 @@ const generalErrors = computed(() => {
 
 async function save() {
   const body = payload()
-  const result = validateWorkout(body, id => exerciseById.value.get(id)?.kind)
+  const result = validateWorkout(body, id => exerciseById.value.get(id)?.kind, { mode: mode.value })
   if (!result.success) {
     errors.value = result.fieldErrors
     return
@@ -111,12 +120,12 @@ async function save() {
   saving.value = true
   try {
     const saved = props.initial
-      ? await api<WorkoutDetail>(`/api/workouts/${props.initial.id}`, { method: 'PUT', body: result.data })
-      : await api<WorkoutDetail>('/api/workouts', { method: 'POST', body: result.data })
-    toast.add({ title: 'Workout saved', color: 'success' })
-    clearNuxtData([`workout-${saved.id}`, `workout-edit-${saved.id}`])
+      ? await api<WorkoutDetail>(`/api/workouts/${props.initial.id}`, { method: 'PUT', body: { ...result.data, expectedStatus: props.initial.status } })
+      : await api<WorkoutDetail>('/api/workouts', { method: 'POST', body: { ...result.data, status: mode.value } })
+    toast.add({ title: saved.status === 'draft' ? 'Plan saved' : 'Workout saved', color: 'success' })
+    clearNuxtData([`workout-${saved.id}`, `workout-edit-${saved.id}`, `workout-gym-${saved.id}`])
     await refreshNuxtData('workouts')
-    await navigateTo(`/workouts/${saved.id}`, { replace: true })
+    await navigateTo(saved.status === 'draft' ? '/' : `/workouts/${saved.id}`, { replace: true })
   }
   catch (e) {
     errors.value = apiFieldErrors(e)
@@ -172,6 +181,7 @@ async function save() {
               <template v-else-if="entry.last">No previous record</template>
             </div>
           </div>
+          <VideoLink :url="exerciseById.get(entry.exerciseId)!.videoUrl" :name="exerciseById.get(entry.exerciseId)!.name" />
           <UButton
             icon="i-lucide-trash-2"
             variant="ghost"
@@ -196,7 +206,7 @@ async function save() {
                 <UInput
                   v-model="set[field]"
                   :inputmode="field === 'weightKg' || fieldUnit(exerciseById.get(entry.exerciseId)!.kind, field) === 'min' ? 'decimal' : 'numeric'"
-                  :placeholder="isFieldRequired(exerciseById.get(entry.exerciseId)!.kind, field) ? '' : 'optional'"
+                  :placeholder="mode === 'done' && isFieldRequired(exerciseById.get(entry.exerciseId)!.kind, field) ? '' : 'optional'"
                   :aria-label="`Set ${j + 1} ${fieldUnit(exerciseById.get(entry.exerciseId)!.kind, field)}`"
                   class="w-full"
                   size="lg"
@@ -261,6 +271,8 @@ async function save() {
       data-testid="workout-errors"
     />
 
-    <UButton type="submit" block size="xl" :loading="saving" data-testid="workout-save">Save workout</UButton>
+    <UButton type="submit" block size="xl" :loading="saving" data-testid="workout-save">
+      {{ mode === 'draft' ? 'Save plan' : 'Save workout' }}
+    </UButton>
   </form>
 </template>

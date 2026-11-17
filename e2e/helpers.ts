@@ -37,3 +37,16 @@ export async function expectNoHorizontalScroll(page: Page) {
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)
   expect(overflow).toBeLessThanOrEqual(0)
 }
+
+/** Adds an exercise in the workout form and returns its entry card. */
+export async function pickExercise(page: Page, name: string) {
+  await page.getByTestId('exercise-picker').selectOption({ label: name })
+  const entry = page.getByTestId('workout-entry').filter({ has: page.getByTestId('entry-name').getByText(name, { exact: true }) })
+  await expect(entry).toBeVisible()
+  return entry
+}
+
+/** Creates a planned workout through the API. */
+export async function createDraft(page: Page, body: Record<string, unknown>): Promise<number> {
+  return createWorkout(page, { ...body, status: 'draft' })
+}

@@ -1,10 +1,10 @@
-import { asc, eq } from 'drizzle-orm'
+import { and, asc, eq } from 'drizzle-orm'
 import { computeProgress, type ExerciseProgress, type ProgressPoint } from '../../shared/progress'
 import type { Db } from '../db/client'
 import { sets, workoutExercises, workouts } from '../db/schema'
 import { getExercise } from './exercises'
 
-/** Every workout containing the exercise, oldest first, with its sets and progress value. */
+/** Every done workout containing the exercise, oldest first, with its sets and progress value. Drafts are excluded. */
 export function getExerciseProgress(db: Db, exerciseId: number): ExerciseProgress {
   const exercise = getExercise(db, exerciseId)
 
@@ -22,7 +22,7 @@ export function getExerciseProgress(db: Db, exerciseId: number): ExerciseProgres
     .from(workoutExercises)
     .innerJoin(workouts, eq(workouts.id, workoutExercises.workoutId))
     .innerJoin(sets, eq(sets.workoutExerciseId, workoutExercises.id))
-    .where(eq(workoutExercises.exerciseId, exerciseId))
+    .where(and(eq(workoutExercises.exerciseId, exerciseId), eq(workouts.status, 'done')))
     .orderBy(asc(workouts.date), asc(workouts.id), asc(sets.position))
     .all()
 

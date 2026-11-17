@@ -2,7 +2,7 @@
 
 Everything needed to configure, run, test and change the app. For what the app does, see the [README](README.md).
 
-**Stack:** Nuxt 4 (Vue) single-page app with a built-in server API, SQLite via Drizzle ORM, Nuxt UI, Chart.js. Packaged as one Docker image.
+**Stack:** Nuxt 4 (Vue) single-page app with a built-in server API, SQLite via Drizzle ORM, Nuxt UI, Chart.js, pdf.js (plan import, in the browser). Packaged as one Docker image.
 
 ## Requirements
 
@@ -96,6 +96,7 @@ Before relying on a new version, run through these against `docker compose up --
 - Log in with your credentials; a wrong password is rejected.
 - Log a trainer workout and a solo workout; the second time you add an exercise, last time's values are pre-filled.
 - Edit a set value and delete a workout (cancel once, then confirm).
+- Import the trainer's plan PDF, adjust the draft, open it in gym mode, tick sets, swap an exercise and finish it; the finished workout appears in history and progress.
 - Open an exercise's progress chart and history.
 - **Persistence:** run `docker compose down`, then `docker compose up -d`, and confirm your workouts are still there. (The automated API suite checks the same thing at the process level.)
 - Open the app on your phone over Wi-Fi and check the layout.
@@ -111,12 +112,31 @@ npm ci
 npm run dev        # http://localhost:3000 with hot reload, reads .env
 ```
 
-Database schema changes: edit `server/db/schema.ts`, then run `npm run db:generate` and commit the generated migration in `server/db/migrations/`. Migrations are applied automatically on startup.
+Database schema changes: edit `server/db/schema.ts`, then run `npm run db:generate` and commit the generated migration in `server/db/migrations/`. Migrations are applied automatically on startup. `0001_drafts_and_videos` added `workouts.status` (`draft` or `done`; existing workouts became `done`), `sets.completed` and `exercises.video_url`.
+
+### Planned workouts and gym mode
+
+- A **draft** is a workout with `status: 'draft'`. Drafts may have empty set values, are listed under Planned on the home screen, and are left out of history, last-time values and progress.
+- **Gym mode** (`/workouts/:id/gym`) saves the whole draft with `PUT /api/workouts/:id` after every change: debounced, one request at a time, retried while offline (`shared/save-queue.ts`, `app/composables/useDraftSaving.ts`).
+- `POST /api/workouts/:id/finish` turns a draft into a done workout, keeping only sets marked done.
+
+### Plan import
+
+- The browser reads the PDF with pdf.js (`app/utils/pdf-extract.ts`, loaded only on the import page). The pdf.js worker is served from the app's own origin, so it works under the CSP without exceptions. Only the reviewed rows are sent to the server, so the JSON-only request guard is unchanged.
+- `shared/plan-import.ts` parses the trainer's table by the positions of its header labels. The Polish labels live only in `PLAN_HEADER_LABELS`; everything else uses English names. Tempo and RIR are ignored.
+- `POST /api/plan-imports` saves a confirmed review in one transaction: new exercises, video links for exercises without one, and the draft.
+- Tests use a **synthetic** plan, `e2e/fixtures/trainer-plan.pdf`: the trainer's layout with made-up exercises, values and `example.com` video links. Never commit a real plan or real video links. The parser's unit tests read `test/unit/fixtures/plan-example.json`, extracted from that PDF. After changing the generator or the extraction, regenerate both:
+
+  ```bash
+  node scripts/make-plan-fixture-pdf.mjs e2e/fixtures/trainer-plan.pdf
+  node scripts/extract-plan-fixture.mjs e2e/fixtures/trainer-plan.pdf test/unit/fixtures/plan-example.json
+  ```
 
 ## Security
 
 - **Login:** credentials come only from the environment. Failed logins are throttled per client (5 failures in 15 minutes blocks that client for 15 minutes; see `NUXT_TRUSTED_PROXY`).
 - **Session:** encrypted HTTP-only cookie, `SameSite=Lax`, `Secure` unless explicitly disabled for local HTTP.
 - **API request guard** (`server/middleware/auth.ts`, `server/lib/request-guard.ts`): every `/api` route except login, health and the session check requires a session. Write requests must be JSON, at most 256 KB, with a declared `Content-Length`, and are rejected when they come from another site (`Sec-Fetch-Site`, or `Origin` for older browsers).
+- **Video links:** only `https://` URLs are accepted. They open in a new tab with `rel="noopener noreferrer"` and are never embedded.
 - **Headers:** a Content-Security-Policy without `unsafe-inline` scripts (HTML pages allow their own inline scripts by hash, see `server/plugins/csp.ts`), HSTS, `X-Frame-Options: DENY`, `nosniff`, a strict referrer policy and a permissions policy. Because the CSP allows no third-party connections, every icon must be in the client bundle (`icon.clientBundle` in `nuxt.config.ts`).
 - **Limits:** at most 30 exercises per workout and 30 sets per exercise.

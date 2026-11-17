@@ -41,6 +41,7 @@ const editing = ref<Exercise>()
 const editOpen = ref(false)
 const editName = ref('')
 const editKind = ref<ExerciseKind>()
+const editVideoUrl = ref('')
 const editErrors = ref<Record<string, string>>({})
 const saving = ref(false)
 
@@ -48,6 +49,7 @@ function openEdit(exercise: Exercise) {
   editing.value = exercise
   editName.value = exercise.name
   editKind.value = exercise.kind
+  editVideoUrl.value = exercise.videoUrl ?? ''
   editErrors.value = {}
   editOpen.value = true
 }
@@ -57,7 +59,7 @@ async function saveEdit() {
   saving.value = true
   editErrors.value = {}
   try {
-    const body: Record<string, string> = { name: editName.value }
+    const body: Record<string, string> = { name: editName.value, videoUrl: editVideoUrl.value }
     if (editKind.value && editKind.value !== editing.value.kind) body.kind = editKind.value
     await api(`/api/exercises/${editing.value.id}`, { method: 'PATCH', body })
     editOpen.value = false
@@ -101,6 +103,7 @@ async function saveEdit() {
           <span class="truncate font-medium" data-testid="exercise-item-name">{{ exercise.name }}</span>
           <KindBadge :kind="exercise.kind" />
         </NuxtLink>
+        <VideoLink :url="exercise.videoUrl" :name="exercise.name" />
         <UButton
           icon="i-lucide-pencil"
           variant="ghost"
@@ -125,6 +128,17 @@ async function saveEdit() {
             :help="editing?.used ? 'The kind cannot change once the exercise has history.' : undefined"
           >
             <KindPicker v-model="editKind" :disabled="editing?.used" testid-prefix="edit-kind" />
+          </UFormField>
+          <UFormField label="Video link" name="videoUrl" :error="editErrors.videoUrl" help="Optional, e.g. a YouTube link (https://...)">
+            <UInput
+              v-model="editVideoUrl"
+              type="url"
+              inputmode="url"
+              placeholder="https://"
+              class="w-full"
+              size="lg"
+              data-testid="exercise-edit-video"
+            />
           </UFormField>
           <UButton type="submit" block size="lg" :loading="saving" data-testid="exercise-edit-save">Save</UButton>
         </form>
