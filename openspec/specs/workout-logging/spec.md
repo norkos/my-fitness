@@ -163,7 +163,7 @@ In gym mode the system SHALL save each change (a set marked done or undone, a va
 In a draft, the system SHALL let the user replace an exercise with another catalog exercise at the same position. If both have the same kind, the planned sets SHALL be kept; otherwise the sets SHALL be pre-filled with the new exercise's last-time values, or one empty set if it has none. If any set of the replaced exercise was marked done, the system SHALL ask for confirmation first.
 
 #### Scenario: Same kind
-- **WHEN** "Rozpiętki na ławce płaskiej" planned as 3 x 15 at 6 kg is swapped for "Rozpiętki na maszynie"
+- **WHEN** "Flat bench flyes" planned as 3 x 15 at 6 kg is swapped for "Machine flyes"
 - **THEN** the new exercise takes the same position with 3 sets of 15 at 6 kg
 
 #### Scenario: Different kind
@@ -178,12 +178,12 @@ In a draft, the system SHALL let the user replace an exercise with another catal
 The swap list SHALL show catalog exercises that are not already in the draft, with exercises from done workouts first ordered by most recently done, followed by never-done exercises alphabetically, and SHALL be searchable by name.
 
 #### Scenario: Recently done first
-- **WHEN** the user opens the swap list and "Wiosłowanie" was done yesterday and "Martwy ciąg" last week
-- **THEN** "Wiosłowanie" is listed before "Martwy ciąg", and never-done exercises follow
+- **WHEN** the user opens the swap list and "Dumbbell row" was done yesterday and "Deadlift" last week
+- **THEN** "Dumbbell row" is listed before "Deadlift", and never-done exercises follow
 
 #### Scenario: Searching
-- **WHEN** the user types "wios" in the swap list
-- **THEN** only exercises whose name contains "wios", ignoring letter case, are shown
+- **WHEN** the user types "row" in the swap list
+- **THEN** only exercises whose name contains "row", ignoring letter case, are shown
 
 ### Requirement: Finish a draft
 The system SHALL let the user finish a draft, which turns it into a done workout keeping only sets marked done and only exercises with at least one done set. Finishing SHALL apply the validation of a done workout and SHALL be refused if no set is marked done.

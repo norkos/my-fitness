@@ -25,11 +25,11 @@ The system SHALL read plan PDFs laid out as a single table with the columns Nr, 
 For each row the system SHALL read the exercise name, the number of sets (Serie), the reps or duration (Ruchy) and the weight (Ciężar). A Ruchy value with an `s` suffix SHALL be read as a duration in seconds. The Nr, Tempo and RIR columns SHALL be ignored.
 
 #### Scenario: Weight and reps row
-- **WHEN** a row reads "Wyciskanie hantli leżąc", 4, 10, 3010, 2, "12,5kg"
+- **WHEN** a row reads "Dumbbell bench press", 4, 10, 3010, 2, "12,5kg"
 - **THEN** the planned exercise has 4 sets of 10 reps at 12.5 kg
 
 #### Scenario: Timed row
-- **WHEN** a row reads "Deska", 3, "40s", 2010, 1, "40s"
+- **WHEN** a row reads "Plank", 3, "40s", 2010, 1, "40s"
 - **THEN** the planned exercise has 3 sets of 40 seconds and no weight
 
 #### Scenario: Repeated weight columns
@@ -48,7 +48,7 @@ For each row the system SHALL read the exercise name, the number of sets (Serie)
 The system SHALL take the link attached to an exercise name in the PDF, when present, as that exercise's video link. Only `https://` links SHALL be accepted; rows without a link SHALL import with no video.
 
 #### Scenario: Name with a link
-- **WHEN** the name "Deska" links to https://example.com/videos/plank
+- **WHEN** the name "Plank" links to https://example.com/videos/plank
 - **THEN** the planned exercise carries that video link
 
 #### Scenario: Name without a link
@@ -59,8 +59,8 @@ The system SHALL take the link attached to an exercise name in the PDF, when pre
 The system SHALL match each imported name to an existing exercise when the names are equal after ignoring letter case, surrounding whitespace and trailing punctuation or apostrophe suffixes. Names SHALL be kept in their original language.
 
 #### Scenario: Existing exercise
-- **WHEN** the catalog has "Deska" and the PDF row reads " deska "
-- **THEN** the row is linked to the existing "Deska" exercise
+- **WHEN** the catalog has "Plank" and the PDF row reads " plank "
+- **THEN** the row is linked to the existing "Plank" exercise
 
 #### Scenario: Trailing apostrophe suffix
 - **WHEN** the catalog has "Russian twist" and the PDF row reads "Russian twist's"
@@ -74,8 +74,8 @@ Before anything is saved, the system SHALL show every imported row with its valu
 - **THEN** it is proposed as a new weight x reps exercise; a row with reps and no weight is proposed as bodyweight, and a row with a duration as timed
 
 #### Scenario: Link to an existing exercise instead
-- **WHEN** the user links the unmatched "Wznosy boczne" row to the existing exercise "Wznosy bokiem"
-- **THEN** the draft uses "Wznosy bokiem" and no new exercise is created
+- **WHEN** the user links the unmatched "Lateral raise" row to the existing exercise "Side lateral raise"
+- **THEN** the draft uses "Side lateral raise" and no new exercise is created
 
 #### Scenario: Cancelling the import
 - **WHEN** the user leaves the review without confirming

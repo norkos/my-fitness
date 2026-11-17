@@ -73,7 +73,7 @@ The system SHALL allow changing an exercise's kind only while the exercise has n
 The system SHALL let the user set, change or remove an optional video link on an exercise when creating or editing it. A video link MUST be an `https://` URL; other values SHALL be rejected with a validation message.
 
 #### Scenario: Adding a video
-- **WHEN** the user edits "Deska" and enters https://example.com/videos/plank as its video
+- **WHEN** the user edits "Plank" and enters https://example.com/videos/plank as its video
 - **THEN** the exercise is saved with that video link
 
 #### Scenario: Removing a video
@@ -88,8 +88,8 @@ The system SHALL let the user set, change or remove an optional video link on an
 When an exercise has a video link, the system SHALL show a video control for it in the exercises list, the workout view, the draft editor and gym mode. Activating it SHALL open the link in a new browser tab. Exercises without a video SHALL show no video control.
 
 #### Scenario: Exercise with a video
-- **WHEN** the user views a workout containing "Deska", which has a video link
-- **THEN** a video control is shown next to "Deska" and opens the video in a new tab
+- **WHEN** the user views a workout containing "Plank", which has a video link
+- **THEN** a video control is shown next to "Plank" and opens the video in a new tab
 
 #### Scenario: Exercise without a video
 - **WHEN** the user views an exercise that has no video link
