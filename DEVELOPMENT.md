@@ -77,17 +77,25 @@ Tests never touch `./data`; they use temporary databases and dummy credentials.
 
 ```bash
 npm ci
-npm run lint
-npm run typecheck
-npm run build      # API tests run against the built server
-npm test           # unit + API with coverage
+npm run hooks:install   # once per clone: enables the pre-commit hygiene check
+npm run verify          # hygiene, lint, typecheck, build, unit + API tests; one line per step
+npm run verify -- --e2e # ...plus the E2E suite
 ```
 
-For E2E outside Docker, start the app (`npm run build && npm start` with a `.env`), then run `npx playwright install chromium` once and:
+`npm run verify` prints only a summary per step and the full output of a failing step. The individual commands still work: `npm run lint`, `npm run typecheck`, `npm run build` (API tests run against the built server), `npm test`.
+
+For E2E outside Docker, run `npx playwright install chromium` once, then:
 
 ```bash
-E2E_BASE_URL=http://localhost:3000 E2E_USERNAME=... E2E_PASSWORD=... npm run test:e2e
+npm run test:e2e:local                                     # build, then E2E against a throwaway server
+npm run test:e2e:local -- --no-build e2e/import.spec.ts -g "rejects"   # reuse the build, one test
 ```
+
+It starts the production build on a free port with a temporary database and test credentials (never your `.env` or `./data`), runs Playwright and stops the server again. To test against an app you started yourself: `E2E_BASE_URL=http://localhost:3000 E2E_USERNAME=... E2E_PASSWORD=... npm run test:e2e`.
+
+### Repository hygiene
+
+`npm run hygiene` (also the pre-commit hook and a CI step) fails on real video links, Polish text in code and tests (only the trainer's PDF header labels are allowed), PDFs other than the generated fixture, and committed `.env` files. For private terms such as real names, list them one per line in `.hygiene-blocklist` in the repo root; the file is gitignored, so the terms never enter the repository.
 
 ### Manual checks
 

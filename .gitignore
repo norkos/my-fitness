@@ -45,10 +45,14 @@ logs/
 *.swp
 *~
 
-# Agentic dev
+# Agentic dev (project sub-agents in .claude/agents/ are shared; everything else stays local)
 .agents
-.claude/
+.claude/*
+!.claude/agents/
 skills-lock.json
+
+# Private terms for scripts/check-repo-hygiene.mjs; never commit
+.hygiene-blocklist
 
 # OS files
 .DS_Store

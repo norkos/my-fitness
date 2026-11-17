@@ -16,7 +16,11 @@
     "test": "vitest run --coverage",
     "test:unit": "vitest run --project unit",
     "test:api": "vitest run --project api",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test:e2e:local": "node scripts/e2e-local.mjs",
+    "verify": "node scripts/verify.mjs",
+    "hygiene": "node scripts/check-repo-hygiene.mjs",
+    "hooks:install": "git config core.hooksPath .githooks"
   },
   "dependencies": {
     "@iconify-json/lucide": "^1.2.155",

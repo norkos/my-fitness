@@ -26,6 +26,7 @@ jobs:
 
       - run: npm ci --ignore-scripts
       - run: npx nuxt prepare
+      - run: npm run hygiene
       - run: npm run lint
       - run: npm run typecheck
       - run: npm run build

@@ -1,0 +1,4 @@
+#!/bin/sh
+# Blocks commits that contain real video links, Polish text in code/tests, real plan PDFs,
+# env files or private terms (see scripts/check-repo-hygiene.mjs). Enable once: npm run hooks:install
+exec node scripts/check-repo-hygiene.mjs --staged

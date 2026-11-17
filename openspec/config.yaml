@@ -1,32 +1,37 @@
 schema: spec-driven
 
-# Project context (optional)
-# Add only constraints that should guide OpenSpec artifacts and workflows.
-# Include constraints an agent cannot infer by reading the code.
-# Keep general project documentation and discoverable codebase facts out.
-# Example:
-#   context: |
-#     Designs and tasks must cover Windows, macOS, and Linux
-#     Write all artifacts in Spanish
+# Constraints an agent cannot infer from the code. Discoverable facts (stack, layout) live in DEVELOPMENT.md.
+context: |
+  Single user, self-hosted (Docker, one SQLite file), used mostly one-handed on a phone (360 px wide).
+  The user's training data is private: artifacts, examples and test data never contain real plans,
+  names or video links; use made-up values and https://example.com links.
+  Write artifacts in English; example exercise names in English. The trainer's PDF header labels are
+  the only Polish allowed (they describe the input format).
+  Keep the existing security posture: JSON-only API request guard, strict CSP, no third-party
+  connections. Adding an external service, dependency with network access, or new runtime needs the
+  user's explicit approval in the proposal.
+  Every behaviour change ships with tests at the right layer: unit (shared logic, services),
+  API (endpoints against the built server), E2E (Playwright, phone viewport).
 
-# Per-artifact rules (optional)
-# Add custom rules for specific artifacts.
-# Example:
-#   rules:
-#     proposal:
-#       - Keep proposals under 500 words
-#       - Always state what is out of scope
-#     tasks:
-#       - Break tasks into chunks of max 2 hours
+rules:
+  proposal:
+    - Keep it under one page; state what is out of scope
+    - List open questions that change scope instead of assuming an answer
+  design:
+    - Create only for data model changes, new dependencies, cross-cutting or security-relevant changes
+    - For each decision, name the rejected alternative in one sentence
+  specs:
+    - Scenarios use made-up English exercise names and values, never data from the user's real plans
+  tasks:
+    - Each group carries its own tests and docs; verify with `npm run verify` (add `-- --e2e` for UI changes)
+    - End with an integration group that runs the full suite, including E2E
 
-# Per-operation guidance (optional)
-# Add advisory guidance for how apply and archive work should be conducted.
-# This is separate from artifact rules above.
-# Example:
-#   operations:
-#     apply:
-#       guidance:
-#         - Keep test summaries concise
-#     archive:
-#       guidance:
-#         - Summarize the archive outcome before finishing
+operations:
+  apply:
+    guidance:
+      - After each task group, run the diff-reviewer sub-agent on that group's changes and fix blocking/important findings before continuing
+      - Use the verifier sub-agent for checks instead of running test commands in the main conversation
+      - Report progress in one or two lines per task group
+  archive:
+    guidance:
+      - After syncing specs, run `openspec validate --specs --strict` and `npm run hygiene` before moving the change

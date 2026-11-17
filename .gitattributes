@@ -1,2 +1,5 @@
 # Binary test fixtures: never convert line endings (it would break the PDF byte offsets).
 *.pdf binary
+
+# Git hooks run under sh: keep LF line endings on every platform.
+.githooks/* text eol=lf
