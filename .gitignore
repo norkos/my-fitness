@@ -47,6 +47,7 @@ logs/
 
 # Agentic dev (project sub-agents in .claude/agents/ are shared; everything else stays local)
 .agents
+.opencode/
 .claude/*
 !.claude/agents/
 skills-lock.json
