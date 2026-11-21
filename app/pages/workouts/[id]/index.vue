@@ -46,6 +46,9 @@ if (workout.value?.status === 'draft') {
         </li>
       </ul>
 
+      <UButton :to="`/workouts/plan?from=${workout.id}`" icon="i-lucide-repeat" block size="lg" data-testid="workout-repeat">
+        Repeat as draft
+      </UButton>
       <div class="grid grid-cols-2 gap-2">
         <UButton :to="`/workouts/${workout.id}/edit`" icon="i-lucide-pencil" variant="outline" color="neutral" block size="lg" data-testid="workout-edit">
           Edit

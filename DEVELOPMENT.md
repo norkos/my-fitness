@@ -104,6 +104,7 @@ Before relying on a new version, run through these against `docker compose up --
 - Log in with your credentials; a wrong password is rejected.
 - Log a trainer workout and a solo workout; the second time you add an exercise, last time's values are pre-filled.
 - Edit a set value and delete a workout (cancel once, then confirm).
+- Repeat a done workout as a draft: the plan is dated today with last session's exercises and values; save it and it appears under Planned.
 - Import the trainer's plan PDF, adjust the draft, open it in gym mode, tick sets, swap an exercise and finish it; the finished workout appears in history and progress.
 - Open an exercise's progress chart and history.
 - **Persistence:** run `docker compose down`, then `docker compose up -d`, and confirm your workouts are still there. (The automated API suite checks the same thing at the process level.)
