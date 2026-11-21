@@ -159,3 +159,23 @@ export function validateWorkout(
   if (Object.keys(fieldErrors).length) return { success: false, fieldErrors }
   return { success: true, data: { date: parsed.data.date, sessionType: parsed.data.sessionType, exercises } }
 }
+
+/** The parts of a workout that seed a new draft: everything except identity, date and status. */
+export interface DraftSeed {
+  sessionType: SessionType
+  exercises: WorkoutExerciseDetail[]
+}
+
+/**
+ * Copies a workout into the starting values of a new draft: same session type, exercises in order and
+ * set values as recorded, with no set marked done. The source is not modified; the caller picks the date.
+ */
+export function draftFromWorkout(source: WorkoutDetail): DraftSeed {
+  return {
+    sessionType: source.sessionType,
+    exercises: source.exercises.map(e => ({
+      ...e,
+      sets: e.sets.map(s => ({ weightKg: s.weightKg, reps: s.reps, durationS: s.durationS, distanceM: s.distanceM, completed: false })),
+    })),
+  }
+}

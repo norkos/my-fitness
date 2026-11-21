@@ -25,6 +25,8 @@ My Fitness keeps it simple: plan the session (or import your trainer's plan), fo
 
 **Or plan a workout by hand.** Planned workouts wait under *Planned* on the home screen, soonest first. Change them as often as you like the evening before. They don't count as history, don't show up as "last time" values and don't affect your progress charts until you actually do them.
 
+**Repeat a past session.** Open any finished workout and choose *Repeat as draft*: you get a new plan dated today with the same exercises, in the same order, with the sets and values from that session and nothing ticked. Tweak it, then save; nothing is stored until you do, and the original workout stays untouched.
+
 **Gym mode.** Open the plan at the gym (*Start in gym*):
 - Tick each set as you finish it and adjust the numbers to what you actually did: the plan is only a starting point.
 - See last time's numbers and open the exercise's video with one tap, without leaving the workout.

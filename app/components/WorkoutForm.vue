@@ -3,15 +3,19 @@ import type { Exercise } from '#shared/exercises'
 import { formatDate, formatSets, SESSION_LABELS, toIsoDate, tomorrowIsoDate } from '#shared/format'
 import { fieldsForKind, SESSION_TYPES, type SessionType, type WorkoutStatus } from '#shared/kinds'
 import { draftToValues, EMPTY_SET_DRAFT, fieldUnit, isFieldRequired, valuesToDraft, type SetDraft } from '#shared/set-form'
-import { validateWorkout, type LastTime, type WorkoutDetail } from '#shared/workouts'
+import { draftFromWorkout, validateWorkout, type LastTime, type WorkoutDetail } from '#shared/workouts'
 
-/** `draft` creates a planned workout; when editing, the workout's own status decides. */
-const props = defineProps<{ initial?: WorkoutDetail, draft?: boolean }>()
+/**
+ * `initial` edits that workout, whose own status decides the mode. Otherwise a new workout is created:
+ * `draft` makes it planned, and `source` (a done workout) pre-fills a new draft dated today.
+ */
+const props = defineProps<{ initial?: WorkoutDetail, draft?: boolean, source?: WorkoutDetail }>()
 
 const api = useApi()
 const toast = useToast()
 
-const mode = computed<WorkoutStatus>(() => props.initial?.status ?? (props.draft ? 'draft' : 'done'))
+const mode = computed<WorkoutStatus>(() => props.initial?.status ?? (props.draft || props.source ? 'draft' : 'done'))
+const seed = props.initial ?? (props.source ? draftFromWorkout(props.source) : undefined)
 
 /** A set's text fields, plus whether it was ticked in gym mode, which editing keeps. */
 type FormSet = SetDraft & { completed?: boolean }
@@ -24,10 +28,10 @@ interface EntryDraft {
 }
 
 let nextKey = 0
-const date = ref(props.initial?.date ?? (props.draft ? tomorrowIsoDate() : toIsoDate(new Date())))
-const sessionType = ref<SessionType>(props.initial?.sessionType ?? 'solo')
+const date = ref(props.initial?.date ?? (props.draft && !props.source ? tomorrowIsoDate() : toIsoDate(new Date())))
+const sessionType = ref<SessionType>(seed?.sessionType ?? 'solo')
 const entries = ref<EntryDraft[]>(
-  props.initial?.exercises.map(e => ({
+  seed?.exercises.map(e => ({
     key: nextKey++,
     exerciseId: e.exerciseId,
     sets: e.sets.map(s => ({ ...valuesToDraft(e.kind, s), completed: s.completed })),
