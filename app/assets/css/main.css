@@ -60,6 +60,17 @@
   --color-brand-800: #1b5138;
   --color-brand-900: #17432f;
   --color-brand-950: #0b2619;
+
+  /* Exercise kind tile tints, one per kind family (see app/components/KindTile.vue). */
+  --color-tile-strength-bg: #f0f5eb;
+  --color-tile-strength-border: #e6eddf;
+  --color-tile-strength-icon: #6f8f5a;
+  --color-tile-timed-bg: #f6f2e9;
+  --color-tile-timed-border: #eee7d9;
+  --color-tile-timed-icon: #8f7f55;
+  --color-tile-cardio-bg: #ebf1f5;
+  --color-tile-cardio-border: #dde6ed;
+  --color-tile-cardio-icon: #5a7d93;
 }
 
 :root {

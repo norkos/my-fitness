@@ -1,5 +1,6 @@
 <script setup lang="ts">
-defineProps<{ url: string | null | undefined, name: string }>()
+// compact: 36px wide (still 44px tall) for dense rows such as the Exercises list.
+defineProps<{ url: string | null | undefined, name: string, compact?: boolean }>()
 </script>
 
 <template>
@@ -9,7 +10,8 @@ defineProps<{ url: string | null | undefined, name: string }>()
     :href="url"
     target="_blank"
     rel="noopener noreferrer"
-    class="inline-flex size-11 shrink-0 items-center justify-center rounded-md text-primary hover:bg-elevated"
+    :class="compact ? 'h-11 w-9' : 'size-11'"
+    class="inline-flex shrink-0 items-center justify-center rounded-md text-primary hover:bg-elevated"
     :aria-label="`Watch video: ${name}`"
     :title="`Watch video: ${name}`"
     data-testid="video-link"

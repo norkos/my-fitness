@@ -7,13 +7,6 @@ const toast = useToast()
 
 const { data: exercises, refresh, status } = await useAsyncData('exercises', () => api<Exercise[]>('/api/exercises'), { default: () => [] })
 
-const KIND_ICONS: Record<ExerciseKind, string> = {
-  weight_reps: 'i-lucide-dumbbell',
-  bodyweight: 'i-lucide-person-standing',
-  timed: 'i-lucide-timer',
-  cardio: 'i-lucide-heart-pulse',
-}
-
 // Search: client-side, the catalog is small.
 const query = ref('')
 const filtered = computed(() => {
@@ -145,33 +138,33 @@ async function saveEdit() {
       <div v-else class="space-y-2">
         <ListCountRow label="YOUR EXERCISES" :count="filtered.length" noun="exercise" count-testid="exercise-count" />
         <ul class="divide-y divide-default overflow-hidden rounded-[10px] border border-default bg-white" data-testid="exercise-list">
-          <li v-for="exercise in filtered" :key="exercise.id" class="flex items-center gap-2 py-2 pl-3 pr-1 nav:gap-3 nav:pl-4 nav:pr-2" data-testid="exercise-item">
-            <span class="grid size-8 nav:size-10 shrink-0 place-items-center rounded-md bg-primary/10 text-primary" aria-hidden="true">
-              <UIcon :name="KIND_ICONS[exercise.kind]" class="size-4 nav:size-5" />
-            </span>
+          <li v-for="exercise in filtered" :key="exercise.id" class="flex items-center gap-2.5 py-[11px] pl-3 pr-2" data-testid="exercise-item">
+            <KindTile :kind="exercise.kind" />
             <div class="min-w-0 flex-1">
-              <div class="font-semibold text-highlighted break-words" data-testid="exercise-item-name">{{ exercise.name }}</div>
-              <div class="text-sm text-muted" :data-testid="`kind-badge-${exercise.kind}`">{{ KIND_DEFINITIONS[exercise.kind].label }}</div>
+              <div class="font-heading text-sm font-semibold text-highlighted break-words" data-testid="exercise-item-name">{{ exercise.name }}</div>
+              <div class="text-xs text-muted" :data-testid="`kind-badge-${exercise.kind}`">{{ KIND_DEFINITIONS[exercise.kind].label }}</div>
             </div>
-            <VideoLink :url="exercise.videoUrl" :name="exercise.name" />
-            <UButton
-              :to="`/exercises/${exercise.id}`"
-              icon="i-lucide-chart-line"
-              variant="ghost"
-              color="neutral"
-              class="min-w-11 justify-center"
-              :aria-label="`Progress: ${exercise.name}`"
-              data-testid="exercise-link"
-            />
-            <UButton
-              icon="i-lucide-pencil"
-              variant="ghost"
-              color="neutral"
-              class="min-w-11 justify-center"
-              :aria-label="`Edit ${exercise.name}`"
-              data-testid="exercise-edit"
-              @click="openEdit(exercise)"
-            />
+            <div class="flex shrink-0">
+              <VideoLink :url="exercise.videoUrl" :name="exercise.name" compact />
+              <UButton
+                :to="`/exercises/${exercise.id}`"
+                icon="i-lucide-chart-line"
+                variant="ghost"
+                color="neutral"
+                class="h-11 w-9 justify-center px-0"
+                :aria-label="`Progress: ${exercise.name}`"
+                data-testid="exercise-link"
+              />
+              <UButton
+                icon="i-lucide-pencil"
+                variant="ghost"
+                color="neutral"
+                class="h-11 w-9 justify-center px-0"
+                :aria-label="`Edit ${exercise.name}`"
+                data-testid="exercise-edit"
+                @click="openEdit(exercise)"
+              />
+            </div>
           </li>
         </ul>
       </div>

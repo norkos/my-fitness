@@ -74,21 +74,9 @@ Build your own exercise list, rename an exercise at any time without losing its 
 
 Every feature is covered by automated tests at three levels: logic, API, and real-browser tests on a phone-sized screen. They run on every change. Workouts survive restarts and updates, and that is tested too.
 
-## Try it
-
-You need Docker. Copy `.env.example` to `.env`, set a username, password and secret, then:
-
-```bash
-docker compose up --build
-```
-
-Open http://localhost:3000, or `http://<your-pc-ip>:3000` from your phone on the same Wi-Fi.
-
-Configuration, phone access, tests and development are all in the **[Development Guide](DEVELOPMENT.md)**.
-
 ## Roadmap
 
-A new design for the phone screens, the "My Fitness App" design canvas, is the visual target for the next round of work. It is a target, not a contract: the specs in `openspec/specs/` stay authoritative, and where the two disagree, the specs win. Each item below ships as its own OpenSpec change.
+A new design for the phone screens guides the next round of work. It is a target, not a contract: where the design and the app's agreed behaviour disagree, the behaviour wins. Each item below ships on its own.
 
 ### Visual alignment
 
@@ -96,19 +84,19 @@ In implementation order:
 
 - [x] Page headings and section labels (eyebrow line, title with a green dot, subtitle, count row above lists)
 - [x] Workouts home: tabs sized to their text, an "Edit plan" text link plus a compact "Start in gym" button, history as separate cards with icon tiles
-- [ ] Exercises list: compact rows, icon tile tinted per exercise kind
-- [ ] Gym mode: set grid column headers, filled done check, tinted "last time" box
-- [ ] Progress opens as a bottom sheet from the Exercises list (chart kept)
-- [ ] New/edit exercise sheet: 2x2 kind toggles, "Optional" hint on the video link
-- [ ] Bottom navigation icons
+- [x] Exercises list: compact rows, icon tile tinted per exercise kind (#7)
+- [ ] Gym mode: set grid column headers, filled done check, tinted "last time" box (#8)
+- [ ] Progress opens as a bottom sheet from the Exercises list (chart kept) (#9)
+- [ ] New/edit exercise sheet: 2x2 kind toggles, "Optional" hint on the video link (#10)
+- [ ] Bottom navigation icons (#11)
 
 ### Features suggested by the design
 
 Each of these needs its own decision before it is built:
 
-- [ ] Remove an exercise in gym mode
-- [ ] Delete a plan from gym mode
-- [ ] Shorter dates (no year for the current year)
+- [ ] Remove an exercise in gym mode (#12)
+- [ ] Delete a plan from gym mode (#13)
+- [ ] Shorter dates (no year for the current year) (#14)
 
 ### Deliberate deviations from the design
 
@@ -119,3 +107,7 @@ These stay as they are, even where the design differs:
 - Log out stays.
 - The progress chart stays.
 - Gym mode keeps showing the workout date and the save status.
+
+## Try it
+
+How to set it up, run it on your PC and open it from your phone: see the **[Development Guide](DEVELOPMENT.md)**.

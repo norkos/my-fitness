@@ -152,12 +152,53 @@ test('a long name with a video link fits a 360px row', async ({ page }) => {
   const item = page.getByTestId('exercise-item').filter({ hasText: name })
   await expect(item.getByTestId('exercise-item-name')).toHaveText(name)
   await item.scrollIntoViewIfNeeded()
+  const centres: number[] = []
   for (const action of ['video-link', 'exercise-link', 'exercise-edit']) {
     await expect(item.getByTestId(action)).toBeInViewport()
     const box = (await item.getByTestId(action).boundingBox())!
     expect(box.x + box.width).toBeLessThanOrEqual(360)
+    expect(box.height, `${action} height`).toBeGreaterThanOrEqual(44)
+    expect(box.width, `${action} width`).toBeLessThan(44)
+    centres.push(box.y + box.height / 2)
   }
+  // All three actions share one row.
+  expect(Math.max(...centres) - Math.min(...centres)).toBeLessThanOrEqual(4)
+  // The name starts right of the kind tile.
+  const tile = (await item.getByTestId('kind-tile').boundingBox())!
+  const nameBox = (await item.getByTestId('exercise-item-name').boundingBox())!
+  expect(nameBox.x).toBeGreaterThanOrEqual(tile.x + tile.width)
   await expectNoHorizontalScroll(page)
+})
+
+test('tile tint follows the kind family', async ({ page }) => {
+  const rows = [
+    ['weight_reps', unique('Bench Press')],
+    ['bodyweight', unique('Push-ups')],
+    ['timed', unique('Plank')],
+    ['cardio', unique('Rowing')],
+  ] as const
+  for (const [kind, name] of rows) await createExercise(page, name, kind)
+  await page.reload()
+
+  const tiles: Record<string, { bg: string, family: string | null, icon: string | null }> = {}
+  for (const [kind, name] of rows) {
+    const tile = page.getByTestId('exercise-item').filter({ hasText: name }).getByTestId('kind-tile')
+    await expect(tile).toBeVisible()
+    await expect(tile).toHaveAttribute('data-kind', kind)
+    tiles[kind] = {
+      bg: await tile.evaluate(el => getComputedStyle(el).backgroundColor),
+      family: await tile.getAttribute('data-kind-family'),
+      // The tile's only child is the icon; its class names the icon (e.g. i-lucide:dumbbell).
+      icon: await tile.locator(':scope > *').getAttribute('class'),
+    }
+  }
+  const { weight_reps: strength, bodyweight, timed, cardio } = tiles
+  expect(bodyweight!.family).toBe(strength!.family)
+  expect(bodyweight!.bg).toBe(strength!.bg)
+  expect(new Set([strength!.family, timed!.family, cardio!.family]).size).toBe(3)
+  expect(new Set([strength!.bg, timed!.bg, cardio!.bg]).size).toBe(3)
+  // Relies on @nuxt/icon's default css mode, where the class names the icon.
+  expect(new Set(Object.values(tiles).map(t => t.icon)).size, 'icon class names a different icon per kind').toBe(4)
 })
 
 test('opens with the page heading, eyebrow and subtitle', async ({ page }) => {
