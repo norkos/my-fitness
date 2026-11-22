@@ -72,8 +72,10 @@ test.describe('phone (360px)', () => {
   })
 
   test('screens fit the width and have 44px touch targets', async ({ page }) => {
-    const { id } = await planOneExercise(page)
-    const screens = ['/', '/exercises', '/workouts/new', `/workouts/${id}/gym`]
+    const { id, exerciseId } = await planOneExercise(page)
+    // A done workout gives the History tab a card to measure.
+    await createWorkout(page, { date: '2026-02-04', sessionType: 'trainer', exercises: [{ exerciseId, sets: [{ weightKg: 40, reps: 8 }] }] })
+    const screens = ['/', '/?tab=history', '/exercises', '/workouts/new', `/workouts/${id}/gym`]
     for (const path of screens) {
       await page.goto(path)
       await page.waitForLoadState('networkidle')
@@ -105,6 +107,37 @@ test.describe('phone (360px)', () => {
         ]
         return elements.map(el => ({ text: el.textContent?.trim(), px: Number.parseFloat(getComputedStyle(el).fontSize) }))
       })
+      for (const { text, px } of sizes) expect(px, `${path}: "${text}"`).toBeGreaterThanOrEqual(12)
+    }
+  })
+
+  test('home tabs and workout card text is at least 12px', async ({ page }) => {
+    const { exerciseId } = await planOneExercise(page)
+    await createWorkout(page, { date: '2026-02-05', sessionType: 'solo', exercises: [{ exerciseId, sets: [{ weightKg: 40, reps: 8 }] }] })
+    const screens = [
+      { path: '/?tab=planned', card: 'planned-item' },
+      { path: '/?tab=history', card: 'workout-item' },
+    ]
+    for (const { path, card } of screens) {
+      await page.goto(path)
+      await page.waitForLoadState('networkidle')
+      await expect(page.getByTestId(card).first()).toBeVisible()
+      const sizes = await page.evaluate(() => {
+        const roots = [
+          '[role="tab"]', // label and count badge
+          '[data-testid="planned-item-count"]',
+          '[data-testid="workout-item-count"]',
+          '[data-testid="session-badge"]',
+          '[data-testid="planned-item-edit"]',
+          '[data-testid="planned-item-gym"]',
+        ]
+        // Every element that renders text of its own inside those pieces
+        const elements = [...document.querySelectorAll<HTMLElement>(roots.join(','))]
+          .flatMap(root => [root, ...root.querySelectorAll<HTMLElement>('*')])
+          .filter(el => [...el.childNodes].some(n => n.nodeType === Node.TEXT_NODE && n.textContent!.trim()))
+        return elements.map(el => ({ text: el.textContent?.trim(), px: Number.parseFloat(getComputedStyle(el).fontSize) }))
+      })
+      expect(sizes.length, `${path}: text found`).toBeGreaterThan(0)
       for (const { text, px } of sizes) expect(px, `${path}: "${text}"`).toBeGreaterThanOrEqual(12)
     }
   })
