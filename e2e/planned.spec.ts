@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import type { WorkoutDetail, WorkoutSummary } from '../shared/workouts'
-import { createDraft, createExercise, createWorkout, expectNoHorizontalScroll, loginAndWaitForHome, pickExercise, unique } from './helpers'
+import { createDraft, createExercise, createWorkout, expectNoHorizontalScroll, loginAndWaitForHome, openHomeTab, pickExercise, unique } from './helpers'
 
 test.beforeEach(async ({ page }) => {
   await loginAndWaitForHome(page)
@@ -31,10 +31,12 @@ test('plans a workout by hand, edits it the evening before and deletes it', asyn
   await expect(page.getByTestId('home')).toBeVisible()
   const item = page.getByTestId('planned-item').filter({ hasText: first.label })
   await expect(item).toContainText('2 exercises')
+  await openHomeTab(page, 'History')
   await expect(page.getByTestId('workout-item').filter({ hasText: first.label })).toHaveCount(0)
+  await openHomeTab(page, 'Planned')
 
   // Change it: drop the plank, move the date
-  await item.click()
+  await item.getByTestId('planned-item-edit').click()
   await expect(page.getByTestId('planned-badge')).toBeVisible()
   await expect(page.getByTestId('start-gym')).toBeVisible()
   await expect(page.getByTestId('set-row')).toHaveCount(3)
@@ -45,10 +47,11 @@ test('plans a workout by hand, edits it the evening before and deletes it', asyn
 
   const moved = page.getByTestId('planned-item').filter({ hasText: second.label })
   await expect(moved).toContainText('1 exercise')
+  await openHomeTab(page, 'Planned')
   await expect(page.getByTestId('planned-item').filter({ hasText: first.label })).toHaveCount(0)
 
   // Opening a draft's address directly shows its editor, not an empty workout view
-  await moved.click()
+  await moved.getByTestId('planned-item-edit').click()
   await expect(page).toHaveURL(/\/workouts\/\d+\/edit$/)
   const editUrl = page.url()
   await page.goto(editUrl.replace(/\/edit$/, ''))
@@ -61,6 +64,7 @@ test('plans a workout by hand, edits it the evening before and deletes it', asyn
   await page.getByTestId('workout-delete').click()
   await page.getByTestId('delete-confirm').click()
   await expect(page.getByTestId('home')).toBeVisible()
+  await openHomeTab(page, 'Planned')
   await expect(page.getByTestId('planned-item').filter({ hasText: second.label })).toHaveCount(0)
 })
 
@@ -165,7 +169,7 @@ test('repeating stores nothing until saved, and a missing source falls back to a
   await page.goto(`/workouts/${sourceId}`)
   await page.getByTestId('workout-repeat').click()
   await expect(page.getByTestId('entry-name')).toHaveText([bench])
-  await page.getByRole('link', { name: 'Workouts' }).click()
+  await page.locator('main').getByRole('link', { name: 'Workouts' }).click()
   await expect(page.getByTestId('home')).toBeVisible()
   expect(await draftsWith(page, benchId)).toEqual([])
 

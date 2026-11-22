@@ -9,7 +9,7 @@ defineProps<{ url: string | null | undefined, name: string }>()
     :href="url"
     target="_blank"
     rel="noopener noreferrer"
-    class="inline-flex shrink-0 items-center justify-center rounded-md p-1.5 text-primary hover:bg-elevated"
+    class="inline-flex size-11 shrink-0 items-center justify-center rounded-md text-primary hover:bg-elevated"
     :aria-label="`Watch video: ${name}`"
     :title="`Watch video: ${name}`"
     data-testid="video-link"

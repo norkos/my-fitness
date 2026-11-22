@@ -26,6 +26,10 @@ export interface WorkoutSummary {
   sessionType: SessionType
   status: WorkoutStatus
   exerciseCount: number
+  /** Total sets across all exercises. */
+  setCount: number
+  /** Exercise names in workout order. */
+  exerciseNames: string[]
 }
 
 export interface WorkoutExerciseDetail {

@@ -1,3 +1,4 @@
+import Database from 'better-sqlite3'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { startApp, type TestApp } from './helpers/app'
 
@@ -163,6 +164,35 @@ describe('workouts API', () => {
   it('marks exercises as used once logged', async () => {
     const list = (await app.request('/api/exercises', { cookie })).body
     expect(list.every((e: any) => e.used)).toBe(true)
+  })
+
+  it('summarises set counts and exercise names in workout order', async () => {
+    const squat = (await app.request('/api/exercises', { method: 'POST', cookie, body: { name: 'Squat', kind: 'weight_reps' } })).body.id
+    const draft = (await create({
+      date: '2026-11-25',
+      sessionType: 'solo',
+      status: 'draft',
+      exercises: [
+        { exerciseId: bench, sets: [{ weightKg: 50, reps: 8 }, { weightKg: 50, reps: 8 }, { weightKg: 50, reps: 8 }] },
+        { exerciseId: squat, sets: [{ weightKg: 60, reps: 5 }, { weightKg: 60, reps: 5 }] },
+        { exerciseId: plank, sets: [{ durationS: 45 }] },
+      ],
+    })).body.id
+
+    // A workout without exercises cannot be created through the API; insert one directly (WAL allows concurrent access).
+    const sqlite = new Database(app.dbPath)
+    const empty = Number(sqlite.prepare(`insert into workouts (date, session_type, created_at, updated_at) values ('2026-11-26', 'solo', 0, 0)`).run().lastInsertRowid)
+    sqlite.close()
+
+    const summaryOf = async (id: number) => (await app.request('/api/workouts', { cookie })).body.find((w: any) => w.id === id)
+    expect(await summaryOf(draft)).toMatchObject({ exerciseCount: 3, setCount: 6, exerciseNames: ['Bench press', 'Squat', 'Plank'] })
+    expect(await summaryOf(empty)).toMatchObject({ exerciseCount: 0, setCount: 0, exerciseNames: [] })
+
+    await app.request(`/api/exercises/${bench}`, { method: 'PATCH', cookie, body: { name: 'Flat bench press' } })
+    expect((await summaryOf(draft)).exerciseNames).toEqual(['Flat bench press', 'Squat', 'Plank'])
+
+    await app.request(`/api/workouts/${draft}`, { method: 'DELETE', cookie })
+    await app.request(`/api/workouts/${empty}`, { method: 'DELETE', cookie })
   })
 })
 

@@ -28,11 +28,10 @@ async function remove() {
   <UButton icon="i-lucide-trash-2" variant="outline" color="error" block size="lg" data-testid="workout-delete" @click="confirmOpen = true">
     Delete
   </UButton>
-  <UModal
+  <AppSheet
     v-model:open="confirmOpen"
     :title="planned ? 'Delete this planned workout?' : 'Delete this workout?'"
     description="All its exercises and sets will be removed."
-    :ui="{ content: 'max-w-sm' }"
   >
     <template #footer>
       <div class="flex w-full gap-2">
@@ -40,5 +39,5 @@ async function remove() {
         <UButton color="error" block :loading="deleting" data-testid="delete-confirm" @click="remove">Delete</UButton>
       </div>
     </template>
-  </UModal>
+  </AppSheet>
 </template>

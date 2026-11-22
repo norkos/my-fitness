@@ -35,7 +35,7 @@ function choose(exercise: Exercise) {
 </script>
 
 <template>
-  <UModal v-model:open="open" :title="`Replace ${replacing}`" :ui="{ content: 'max-w-sm' }">
+  <AppSheet v-model:open="open" :title="`Replace ${replacing}`">
     <template #body>
       <div v-if="chosen" class="space-y-3" data-testid="swap-confirm">
         <p>Some sets of <strong>{{ replacing }}</strong> are already done. Replace it with <strong>{{ chosen.name }}</strong> anyway? The done sets will be replaced.</p>
@@ -65,5 +65,5 @@ function choose(exercise: Exercise) {
         <p v-else class="text-center text-sm text-muted py-4" data-testid="swap-empty">No matching exercises.</p>
       </div>
     </template>
-  </UModal>
+  </AppSheet>
 </template>
