@@ -3,7 +3,7 @@ import withNuxt from './.nuxt/eslint.config.mjs'
 
 export default withNuxt(
   {
-    ignores: ['openspec/**', '.opencode/**', 'coverage/**', 'playwright-report/**', 'test-results/**', 'server/db/migrations/**'],
+    ignores: ['openspec/**', '.opencode/**', 'coverage/**', 'playwright-report/**', 'test-results/**', 'server/db/migrations/**', 'Fitness Mobile App UX/**'],
   },
   {
     // Tests inspect loosely typed JSON responses.

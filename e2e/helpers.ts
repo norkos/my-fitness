@@ -50,3 +50,10 @@ export async function pickExercise(page: Page, name: string) {
 export async function createDraft(page: Page, body: Record<string, unknown>): Promise<number> {
   return createWorkout(page, { ...body, status: 'draft' })
 }
+
+/** Selects a tab on the home screen; the tab label also shows a count, e.g. "History 3". */
+export async function openHomeTab(page: Page, name: 'Planned' | 'History') {
+  const tab = page.getByRole('tab', { name: new RegExp(`^${name}`) })
+  await tab.click()
+  await expect(tab).toHaveAttribute('aria-selected', 'true')
+}

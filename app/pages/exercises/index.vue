@@ -1,19 +1,45 @@
 <script setup lang="ts">
 import type { Exercise } from '#shared/exercises'
-import type { ExerciseKind } from '#shared/kinds'
+import { KIND_DEFINITIONS, type ExerciseKind } from '#shared/kinds'
 
 const api = useApi()
 const toast = useToast()
 
 const { data: exercises, refresh, status } = await useAsyncData('exercises', () => api<Exercise[]>('/api/exercises'), { default: () => [] })
 
+const KIND_ICONS: Record<ExerciseKind, string> = {
+  weight_reps: 'i-lucide-dumbbell',
+  bodyweight: 'i-lucide-person-standing',
+  timed: 'i-lucide-timer',
+  cardio: 'i-lucide-heart-pulse',
+}
+
+// Search: client-side, the catalog is small.
+const query = ref('')
+const filtered = computed(() => {
+  const q = query.value.trim().toLocaleLowerCase()
+  return q ? exercises.value.filter(e => e.name.toLocaleLowerCase().includes(q)) : exercises.value
+})
+const countLabel = computed(() => `${filtered.value.length} ${filtered.value.length === 1 ? 'exercise' : 'exercises'}`)
+
 // Create
+const createOpen = ref(false)
 const newName = ref('')
 const newKind = ref<ExerciseKind>()
+const newVideoUrl = ref('')
 const createErrors = ref<Record<string, string>>({})
 const creating = ref(false)
 
+function openCreate() {
+  newName.value = ''
+  newKind.value = undefined
+  newVideoUrl.value = ''
+  createErrors.value = {}
+  createOpen.value = true
+}
+
 async function create() {
+  if (creating.value) return
   createErrors.value = {}
   if (!newKind.value) {
     createErrors.value = { kind: 'Choose a kind' }
@@ -21,19 +47,21 @@ async function create() {
   }
   creating.value = true
   try {
-    await api('/api/exercises', { method: 'POST', body: { name: newName.value, kind: newKind.value } })
+    const body: Record<string, string> = { name: newName.value, kind: newKind.value }
+    if (newVideoUrl.value.trim()) body.videoUrl = newVideoUrl.value
+    await api('/api/exercises', { method: 'POST', body })
     toast.add({ title: `Added ${newName.value.trim()}`, color: 'success' })
-    newName.value = ''
-    newKind.value = undefined
-    await refresh()
+    createOpen.value = false
   }
   catch (e) {
     createErrors.value = apiFieldErrors(e)
     if (!Object.keys(createErrors.value).length) createErrors.value = { name: apiErrorMessage(e) }
+    return
   }
   finally {
     creating.value = false
   }
+  await refresh()
 }
 
 // Edit
@@ -76,46 +104,109 @@ async function saveEdit() {
 </script>
 
 <template>
-  <div class="space-y-6">
-    <h1 class="text-xl font-semibold">Exercises</h1>
-
-    <UCard>
-      <form class="space-y-3" data-testid="exercise-create-form" @submit.prevent="create">
-        <UFormField label="New exercise" name="name" :error="createErrors.name">
-          <UInput v-model="newName" placeholder="e.g. Bench press" class="w-full" size="lg" data-testid="exercise-name" />
-        </UFormField>
-        <UFormField label="Kind" name="kind" :error="createErrors.kind">
-          <KindPicker v-model="newKind" />
-        </UFormField>
-        <UButton type="submit" block size="lg" icon="i-lucide-plus" :loading="creating" data-testid="exercise-create">
-          Add exercise
-        </UButton>
-      </form>
-    </UCard>
-
-    <div v-if="status !== 'pending' && !exercises.length" class="text-center text-muted py-6" data-testid="exercises-empty">
-      No exercises yet. Add the ones you do above.
+  <div class="space-y-5" data-testid="exercises">
+    <div class="flex items-center justify-between gap-3">
+      <h1 class="text-2xl font-extrabold tracking-tight text-highlighted">Exercises</h1>
+      <UButton icon="i-lucide-plus" size="lg" data-testid="exercise-add" @click="openCreate">Add exercise</UButton>
     </div>
 
-    <ul v-else class="divide-y divide-default rounded-lg border border-default" data-testid="exercise-list">
-      <li v-for="exercise in exercises" :key="exercise.id" class="flex items-center gap-2 px-3 py-2" data-testid="exercise-item">
-        <NuxtLink :to="`/exercises/${exercise.id}`" class="flex-1 min-w-0 py-2 flex items-center gap-2" data-testid="exercise-link">
-          <span class="truncate font-medium" data-testid="exercise-item-name">{{ exercise.name }}</span>
-          <KindBadge :kind="exercise.kind" />
-        </NuxtLink>
-        <VideoLink :url="exercise.videoUrl" :name="exercise.name" />
-        <UButton
-          icon="i-lucide-pencil"
-          variant="ghost"
-          color="neutral"
-          :aria-label="`Edit ${exercise.name}`"
-          data-testid="exercise-edit"
-          @click="openEdit(exercise)"
-        />
-      </li>
-    </ul>
+    <div v-if="status !== 'pending' && !exercises.length" class="rounded-[10px] border border-dashed border-default p-8 text-center space-y-3" data-testid="exercises-empty">
+      <p class="text-muted">No exercises yet. Add the ones you do.</p>
+      <UButton icon="i-lucide-plus" @click="openCreate">Add exercise</UButton>
+    </div>
 
-    <UModal v-model:open="editOpen" title="Edit exercise" :ui="{ content: 'max-w-sm' }">
+    <template v-else-if="exercises.length">
+      <div class="space-y-2">
+        <UInput
+          v-model="query"
+          icon="i-lucide-search"
+          placeholder="Search exercises"
+          aria-label="Search exercises"
+          class="w-full"
+          size="xl"
+          :ui="{ base: 'bg-white' }"
+          data-testid="exercise-search"
+        >
+          <template v-if="query" #trailing>
+            <UButton
+              icon="i-lucide-x"
+              variant="link"
+              color="neutral"
+              class="min-w-11 justify-center"
+              aria-label="Clear search"
+              data-testid="exercise-search-clear"
+              @click="query = ''"
+            />
+          </template>
+        </UInput>
+        <p class="text-sm text-muted" data-testid="exercise-count">{{ countLabel }}</p>
+      </div>
+
+      <div v-if="!filtered.length" class="rounded-[10px] border border-dashed border-default p-8 text-center space-y-3" data-testid="exercises-no-match">
+        <p class="text-muted">No exercises match "{{ query.trim() }}".</p>
+        <UButton variant="outline" color="neutral" data-testid="exercise-search-reset" @click="query = ''">Clear search</UButton>
+      </div>
+
+      <ul v-else class="divide-y divide-default overflow-hidden rounded-[10px] border border-default bg-white" data-testid="exercise-list">
+        <li v-for="exercise in filtered" :key="exercise.id" class="flex items-center gap-2 py-2 pl-3 pr-1 nav:gap-3 nav:pl-4 nav:pr-2" data-testid="exercise-item">
+          <span class="grid size-8 nav:size-10 shrink-0 place-items-center rounded-md bg-primary/10 text-primary" aria-hidden="true">
+            <UIcon :name="KIND_ICONS[exercise.kind]" class="size-4 nav:size-5" />
+          </span>
+          <div class="min-w-0 flex-1">
+            <div class="font-semibold text-highlighted break-words" data-testid="exercise-item-name">{{ exercise.name }}</div>
+            <div class="text-sm text-muted" :data-testid="`kind-badge-${exercise.kind}`">{{ KIND_DEFINITIONS[exercise.kind].label }}</div>
+          </div>
+          <VideoLink :url="exercise.videoUrl" :name="exercise.name" />
+          <UButton
+            :to="`/exercises/${exercise.id}`"
+            icon="i-lucide-chart-line"
+            variant="ghost"
+            color="neutral"
+            class="min-w-11 justify-center"
+            :aria-label="`Progress: ${exercise.name}`"
+            data-testid="exercise-link"
+          />
+          <UButton
+            icon="i-lucide-pencil"
+            variant="ghost"
+            color="neutral"
+            class="min-w-11 justify-center"
+            :aria-label="`Edit ${exercise.name}`"
+            data-testid="exercise-edit"
+            @click="openEdit(exercise)"
+          />
+        </li>
+      </ul>
+    </template>
+
+    <AppSheet v-model:open="createOpen" title="Add exercise">
+      <template #body>
+        <form class="space-y-3" data-testid="exercise-create-form" @submit.prevent="create">
+          <UFormField label="Name" name="name" :error="createErrors.name">
+            <UInput v-model="newName" placeholder="e.g. Bench press" class="w-full" size="lg" autofocus data-testid="exercise-name" />
+          </UFormField>
+          <UFormField label="Kind" name="kind" :error="createErrors.kind">
+            <KindPicker v-model="newKind" />
+          </UFormField>
+          <UFormField label="Video link" name="videoUrl" :error="createErrors.videoUrl" help="Optional, e.g. a YouTube link (https://...)">
+            <UInput
+              v-model="newVideoUrl"
+              type="url"
+              inputmode="url"
+              placeholder="https://"
+              class="w-full"
+              size="lg"
+              data-testid="exercise-create-video"
+            />
+          </UFormField>
+          <UButton type="submit" block size="lg" icon="i-lucide-plus" :loading="creating" data-testid="exercise-create">
+            Add exercise
+          </UButton>
+        </form>
+      </template>
+    </AppSheet>
+
+    <AppSheet v-model:open="editOpen" title="Edit exercise">
       <template #body>
         <form class="space-y-3" data-testid="exercise-edit-form" @submit.prevent="saveEdit">
           <UFormField label="Name" name="name" :error="editErrors.name">
@@ -143,6 +234,6 @@ async function saveEdit() {
           <UButton type="submit" block size="lg" :loading="saving" data-testid="exercise-edit-save">Save</UButton>
         </form>
       </template>
-    </UModal>
+    </AppSheet>
   </div>
 </template>

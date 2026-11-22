@@ -90,6 +90,9 @@ export function listWorkouts(db: Db): WorkoutSummary[] {
       sessionType: workouts.sessionType,
       status: workouts.status,
       exerciseCount: sql<number>`(select count(*) from ${workoutExercises} we where we.workout_id = "workouts"."id")`,
+      setCount: sql<number>`(select count(*) from ${sets} s join ${workoutExercises} we on we.id = s.workout_exercise_id where we.workout_id = "workouts"."id")`,
+      exerciseNames: sql<string[]>`coalesce((select json_group_array(e.name order by we.position) from ${workoutExercises} we join ${exercises} e on e.id = we.exercise_id where we.workout_id = "workouts"."id"), '[]')`
+        .mapWith((value: string) => JSON.parse(value) as string[]),
     })
     .from(workouts)
     .orderBy(desc(workouts.date), desc(workouts.id))

@@ -1,2 +1,98 @@
 @import "tailwindcss";
 @import "@nuxt/ui";
+
+/*
+ * Fonts are bundled and served from the app's own origin (CSP: font-src 'self').
+ * Only the latin and latin-ext subsets are declared; latin-ext covers Polish letters.
+ */
+@font-face {
+  font-family: 'DM Sans Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 1000;
+  src: url('@fontsource-variable/dm-sans/files/dm-sans-latin-ext-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: 'DM Sans Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 1000;
+  src: url('@fontsource-variable/dm-sans/files/dm-sans-latin-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Manrope Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 800;
+  src: url('@fontsource-variable/manrope/files/manrope-latin-ext-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+
+@font-face {
+  font-family: 'Manrope Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 800;
+  src: url('@fontsource-variable/manrope/files/manrope-latin-wght-normal.woff2') format('woff2-variations');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@theme static {
+  --font-sans: 'DM Sans Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-heading: 'Manrope Variable', 'DM Sans Variable', ui-sans-serif, system-ui, sans-serif;
+
+  /* Shell breakpoint: bottom nav and bottom sheets below it, header nav and centered dialogs at or above it.
+     Keep in sync with the input rule below and NAV_BREAKPOINT_PX in app/composables/useWideScreen.ts. */
+  --breakpoint-nav: 600px;
+
+  --color-brand-50: #eff7f2;
+  --color-brand-100: #dbeee2;
+  --color-brand-200: #b9ddc8;
+  --color-brand-300: #8cc5a5;
+  --color-brand-400: #5aa77e;
+  --color-brand-500: #388c62;
+  --color-brand-600: #278054;
+  --color-brand-700: #1f6644;
+  --color-brand-800: #1b5138;
+  --color-brand-900: #17432f;
+  --color-brand-950: #0b2619;
+}
+
+:root {
+  --ui-primary: var(--ui-color-primary-600);
+  --ui-bg: #f8faf9;
+  --ui-border: #e2e9e3;
+  --ui-text: #2b3932;
+  --ui-text-highlighted: #17221c;
+  --ui-text-muted: #5f6d65;
+  --ui-text-dimmed: #64716a;
+  /* Base unit: rounded-md (controls) = 7px, rounded-lg (cards) ≈ 10px. */
+  --ui-radius: calc(7px / 1.5);
+}
+
+@layer base {
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-heading);
+  }
+
+  button,
+  a {
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  /* Inputs at 16px on phones so the browser does not zoom on focus (600px = --breakpoint-nav). */
+  @media (width < 600px) {
+    input,
+    select,
+    textarea {
+      font-size: 16px;
+    }
+  }
+}

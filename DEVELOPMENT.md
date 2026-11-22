@@ -89,6 +89,7 @@ For E2E outside Docker, run `npx playwright install chromium` once, then:
 ```bash
 npm run test:e2e:local                                     # build, then E2E against a throwaway server
 npm run test:e2e:local -- --no-build e2e/import.spec.ts -g "rejects"   # reuse the build, one test
+npm run build && npm run screenshots                          # regenerate README screenshots (made-up data, throwaway DB)
 ```
 
 It starts the production build on a free port with a temporary database and test credentials (never your `.env` or `./data`), runs Playwright and stops the server again. To test against an app you started yourself: `E2E_BASE_URL=http://localhost:3000 E2E_USERNAME=... E2E_PASSWORD=... npm run test:e2e`.
@@ -140,6 +141,14 @@ Database schema changes: edit `server/db/schema.ts`, then run `npm run db:genera
   node scripts/make-plan-fixture-pdf.mjs e2e/fixtures/trainer-plan.pdf
   node scripts/extract-plan-fixture.mjs e2e/fixtures/trainer-plan.pdf test/unit/fixtures/plan-example.json
   ```
+
+### UI conventions
+
+- **Tokens:** colors (the `brand` green scale, `--ui-bg`, `--ui-border`, text colors), radii and fonts live in `app/assets/css/main.css`; component defaults (primary color, button and card shapes) in `app/app.config.ts`. Style through Nuxt UI tokens and slots, not parallel CSS classes. The theme is light only (`ui.colorMode: false` in `nuxt.config.ts`).
+- **Shell breakpoint 600 px** (`--breakpoint-nav`, used as `nav:` / `max-nav:`; `useWideScreen()` in script). Below it, navigation is a fixed bottom bar and dialogs are bottom sheets; at or above it, the header holds the navigation. Use it only for the shell; components keep Nuxt UI's own breakpoints.
+- **Every dialog uses `AppSheet`** (a `UModal` wrapper: bottom sheet on phones, centered `max-w-md` otherwise). It keeps focus trapping, Escape and focus return.
+- **Sizes:** no text below 12 px; inputs use 16 px on phones; buttons, links and checkboxes are at least 44 px high on phones (`e2e/mobile-shell.spec.ts` audits this).
+- **Fonts are self-hosted:** Manrope (headings) and DM Sans (body) come from `@fontsource-variable/*`, with only the latin and latin-ext subsets declared in `main.css`. They are bundled under `/_nuxt/`, so `font-src 'self'` holds. Never load fonts from a third party.
 
 ## Security
 

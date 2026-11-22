@@ -20,7 +20,7 @@ export default defineNuxtConfig({
   app: {
     head: {
       title: 'My Fitness',
-      meta: [{ name: 'viewport', content: 'width=device-width, initial-scale=1' }],
+      meta: [{ name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' }],
     },
   },
   routeRules: {
@@ -39,13 +39,15 @@ export default defineNuxtConfig({
   },
   ui: {
     fonts: false,
+    // Light theme only: the palette in main.css has no dark counterpart.
+    colorMode: false,
   },
   icon: {
     // The CSP allows no third-party connections, so every icon must ship in the bundle.
-    // The bundle scan misses the layout's nav icons; list them explicitly.
+    // The bundle scan misses icons chosen at runtime (layout nav, exercise kinds); list them explicitly.
     clientBundle: {
       scan: true,
-      icons: ['lucide:list', 'lucide:dumbbell', 'lucide:log-out'],
+      icons: ['lucide:list', 'lucide:dumbbell', 'lucide:log-out', 'lucide:person-standing', 'lucide:timer', 'lucide:heart-pulse'],
     },
   },
   eslint: {

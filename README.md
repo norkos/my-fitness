@@ -6,6 +6,17 @@ Most people who train regularly hit the same wall: standing at the bench, trying
 
 My Fitness keeps it simple: plan the session (or import your trainer's plan), follow it in the gym, record what you really did, and see how you are progressing. It is a small private web app you host yourself, built for one person and designed to be used one-handed on a phone between sets.
 
+## See it
+
+<p align="center">
+  <img src="docs/screenshots/home-planned.png" width="23%" alt="Home screen with planned workouts">
+  <img src="docs/screenshots/gym-mode.png" width="23%" alt="Gym mode with sets ticked off">
+  <img src="docs/screenshots/progress.png" width="23%" alt="Progress chart and history of an exercise">
+  <img src="docs/screenshots/exercises.png" width="23%" alt="Exercise list with search">
+</p>
+
+*Plan the session, tick sets off in the gym, watch the numbers go up. Screenshots use made-up demo data.*
+
 ## What it does today
 
 ### Log a workout in under a minute

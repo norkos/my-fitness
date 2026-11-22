@@ -95,16 +95,16 @@ describe('listWorkouts', () => {
     const d = log('2026-11-12', [{ exerciseId: plank, sets: [{ durationS: 40 }] }])
 
     expect(listWorkouts(t.db)).toEqual([
-      { id: d.id, date: '2026-11-12', sessionType: 'solo', status: 'done', exerciseCount: 1 },
-      { id: b.id, date: '2026-11-12', sessionType: 'trainer', status: 'done', exerciseCount: 2 },
-      { id: c.id, date: '2026-11-05', sessionType: 'solo', status: 'done', exerciseCount: 1 },
-      { id: a.id, date: '2026-11-01', sessionType: 'solo', status: 'done', exerciseCount: 1 },
+      { id: d.id, date: '2026-11-12', sessionType: 'solo', status: 'done', exerciseCount: 1, setCount: 1, exerciseNames: ['Plank'] },
+      { id: b.id, date: '2026-11-12', sessionType: 'trainer', status: 'done', exerciseCount: 2, setCount: 2, exerciseNames: ['Bench press', 'Plank'] },
+      { id: c.id, date: '2026-11-05', sessionType: 'solo', status: 'done', exerciseCount: 1, setCount: 1, exerciseNames: ['Pull-up'] },
+      { id: a.id, date: '2026-11-01', sessionType: 'solo', status: 'done', exerciseCount: 1, setCount: 1, exerciseNames: ['Bench press'] },
     ])
   })
 
   it('includes drafts with their status', () => {
     const w = plan('2026-11-20', [{ exerciseId: plank, sets: [{ durationS: 45 }] }])
-    expect(listWorkouts(t.db)).toEqual([{ id: w.id, date: '2026-11-20', sessionType: 'solo', status: 'draft', exerciseCount: 1 }])
+    expect(listWorkouts(t.db)).toEqual([{ id: w.id, date: '2026-11-20', sessionType: 'solo', status: 'draft', exerciseCount: 1, setCount: 1, exerciseNames: ['Plank'] }])
   })
 })
 

@@ -148,16 +148,16 @@ async function save() {
         <UInput v-model="date" type="date" class="w-full" size="lg" data-testid="workout-date" />
       </UFormField>
       <UFormField label="Session" name="sessionType" :error="errors.sessionType">
-        <div class="grid grid-cols-2 gap-2" role="radiogroup">
+        <div class="grid grid-cols-2 gap-1 rounded-md border border-default bg-elevated/60 p-1" role="radiogroup" aria-label="Session">
           <UButton
             v-for="type in SESSION_TYPES"
             :key="type"
             role="radio"
             :aria-checked="sessionType === type"
-            :variant="sessionType === type ? 'solid' : 'outline'"
-            :color="sessionType === type ? 'primary' : 'neutral'"
+            variant="ghost"
+            color="neutral"
             block
-            size="lg"
+            :class="sessionType === type ? 'bg-white text-primary font-semibold shadow-sm ring ring-default hover:bg-white' : 'text-muted'"
             :data-testid="`session-${type}`"
             @click="sessionType = type"
           >
@@ -170,36 +170,30 @@ async function save() {
     <UCard
       v-for="(entry, i) in entries"
       :key="entry.key"
-      :ui="{ body: 'p-3 sm:p-4' }"
+      :ui="{ body: 'p-4' }"
       data-testid="workout-entry"
       :data-exercise="exerciseById.get(entry.exerciseId)?.name"
     >
       <template v-if="exerciseById.get(entry.exerciseId)" #default>
-        <div class="flex items-start gap-2 mb-2">
-          <div class="flex-1 min-w-0">
-            <div class="font-medium truncate" data-testid="entry-name">{{ exerciseById.get(entry.exerciseId)!.name }}</div>
-            <div class="text-xs text-muted" data-testid="entry-last">
-              <template v-if="entry.last?.date">
-                Last time ({{ formatDate(entry.last.date) }}): {{ formatSets(exerciseById.get(entry.exerciseId)!.kind, entry.last.sets) }}
-              </template>
-              <template v-else-if="entry.last">No previous record</template>
-            </div>
+        <ExerciseCardHeader
+          :index="i"
+          :exercise-id="entry.exerciseId"
+          :name="exerciseById.get(entry.exerciseId)!.name"
+          :kind="exerciseById.get(entry.exerciseId)!.kind"
+          :video-url="exerciseById.get(entry.exerciseId)!.videoUrl"
+          testid-prefix="entry"
+        >
+          <div class="mt-0.5 text-sm text-muted" data-testid="entry-last">
+            <template v-if="entry.last?.date">
+              Last time ({{ formatDate(entry.last.date) }}): {{ formatSets(exerciseById.get(entry.exerciseId)!.kind, entry.last.sets) }}
+            </template>
+            <template v-else-if="entry.last">No previous record</template>
           </div>
-          <VideoLink :url="exerciseById.get(entry.exerciseId)!.videoUrl" :name="exerciseById.get(entry.exerciseId)!.name" />
-          <UButton
-            icon="i-lucide-trash-2"
-            variant="ghost"
-            color="error"
-            size="sm"
-            :aria-label="`Remove ${exerciseById.get(entry.exerciseId)!.name}`"
-            data-testid="entry-remove"
-            @click="removeExercise(i)"
-          />
-        </div>
+        </ExerciseCardHeader>
 
-        <div class="space-y-2">
+        <div class="mt-3 space-y-2">
           <div v-for="(set, j) in entry.sets" :key="j" class="flex items-start gap-2" data-testid="set-row">
-            <span class="w-5 pt-2 text-sm text-muted text-right">{{ j + 1 }}</span>
+            <span class="grid size-7 mt-1.5 shrink-0 place-items-center rounded-full bg-elevated text-xs font-semibold text-muted" aria-hidden="true">{{ j + 1 }}</span>
             <div class="flex-1 grid gap-2" :class="fieldsForKind(exerciseById.get(entry.exerciseId)!.kind).length > 1 ? 'grid-cols-2' : 'grid-cols-1'">
               <UFormField
                 v-for="field in fieldsForKind(exerciseById.get(entry.exerciseId)!.kind)"
@@ -227,8 +221,7 @@ async function save() {
               icon="i-lucide-x"
               variant="ghost"
               color="neutral"
-              size="sm"
-              class="mt-1"
+              class="min-w-11 justify-center"
               :aria-label="`Remove set ${j + 1}`"
               data-testid="set-remove"
               @click="removeSet(entry, j)"
@@ -236,9 +229,21 @@ async function save() {
           </div>
         </div>
 
-        <UButton icon="i-lucide-plus" variant="soft" size="sm" class="mt-2" data-testid="set-add" @click="addSet(entry)">
-          Add set
-        </UButton>
+        <div class="mt-3 flex items-center justify-between gap-2 border-t border-default pt-3">
+          <UButton icon="i-lucide-plus" variant="soft" data-testid="set-add" @click="addSet(entry)">
+            Add set
+          </UButton>
+          <UButton
+            icon="i-lucide-trash-2"
+            variant="ghost"
+            color="error"
+            :aria-label="`Remove ${exerciseById.get(entry.exerciseId)!.name}`"
+            data-testid="entry-remove"
+            @click="removeExercise(i)"
+          >
+            Remove
+          </UButton>
+        </div>
       </template>
     </UCard>
 
@@ -275,8 +280,14 @@ async function save() {
       data-testid="workout-errors"
     />
 
-    <UButton type="submit" block size="xl" :loading="saving" data-testid="workout-save">
-      {{ mode === 'draft' ? 'Save plan' : 'Save workout' }}
-    </UButton>
+    <!-- On phones the Save button sticks above the bottom nav, within thumb reach. -->
+    <div
+      class="max-nav:sticky max-nav:bottom-(--bottom-nav-height) max-nav:z-10 max-nav:-mx-[21px] max-nav:border-t max-nav:border-default max-nav:bg-default/95 max-nav:px-[21px] max-nav:py-3 max-nav:backdrop-blur"
+      data-testid="save-bar"
+    >
+      <UButton type="submit" block size="xl" :loading="saving" data-testid="workout-save">
+        {{ mode === 'draft' ? 'Save plan' : 'Save workout' }}
+      </UButton>
+    </div>
   </form>
 </template>

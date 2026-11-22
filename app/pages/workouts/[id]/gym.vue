@@ -185,7 +185,7 @@ onBeforeRouteLeave(() => {
 </script>
 
 <template>
-  <div class="space-y-4 pb-24" data-testid="gym-mode">
+  <div class="space-y-4" data-testid="gym-mode">
     <UButton :to="`/workouts/${id}/edit`" icon="i-lucide-arrow-left" variant="ghost" color="neutral" size="sm">Plan</UButton>
 
     <UAlert v-if="error" color="error" variant="soft" title="Workout not found" />
@@ -221,36 +221,27 @@ onBeforeRouteLeave(() => {
         <UCard
           v-for="(entry, i) in entries"
           :key="entry.key"
-          :ui="{ body: 'p-3 sm:p-4' }"
+          :ui="{ body: 'p-4' }"
           data-testid="gym-entry"
           :data-exercise="entry.name"
         >
-          <div class="flex items-start gap-1 mb-2">
-            <div class="flex-1 min-w-0">
-              <div class="flex items-center gap-2">
-                <span class="font-medium truncate" data-testid="gym-entry-name">{{ entry.name }}</span>
-                <KindBadge :kind="entry.kind" />
-              </div>
-              <div class="text-xs text-muted" data-testid="gym-entry-last">
-                <template v-if="lastTimes[entry.key]?.date">
-                  Last time ({{ formatDate(lastTimes[entry.key]!.date!) }}): {{ formatSets(entry.kind, lastTimes[entry.key]!.sets) }}
-                </template>
-                <template v-else-if="lastTimes[entry.key]">No previous record</template>
-              </div>
+          <ExerciseCardHeader
+            :index="i"
+            :exercise-id="entry.exerciseId"
+            :name="entry.name"
+            :kind="entry.kind"
+            :video-url="entry.videoUrl"
+            testid-prefix="gym-entry"
+          >
+            <div class="mt-0.5 text-sm text-muted" data-testid="gym-entry-last">
+              <template v-if="lastTimes[entry.key]?.date">
+                Last time ({{ formatDate(lastTimes[entry.key]!.date!) }}): {{ formatSets(entry.kind, lastTimes[entry.key]!.sets) }}
+              </template>
+              <template v-else-if="lastTimes[entry.key]">No previous record</template>
             </div>
-            <VideoLink :url="entry.videoUrl" :name="entry.name" />
-            <UButton
-              icon="i-lucide-replace"
-              variant="ghost"
-              color="neutral"
-              size="sm"
-              :aria-label="`Replace ${entry.name}`"
-              data-testid="gym-swap"
-              @click="openSwap(i)"
-            />
-          </div>
+          </ExerciseCardHeader>
 
-          <div class="space-y-2">
+          <div class="mt-3 space-y-2">
             <div
               v-for="(set, j) in entry.sets"
               :key="j"
@@ -259,7 +250,7 @@ onBeforeRouteLeave(() => {
               :data-done="set.completed"
               data-testid="gym-set"
             >
-              <span class="w-5 pt-2 text-sm text-muted text-right">{{ j + 1 }}</span>
+              <span class="grid size-7 mt-1.5 shrink-0 place-items-center rounded-full bg-elevated text-xs font-semibold text-muted" aria-hidden="true">{{ j + 1 }}</span>
               <div class="flex-1 grid gap-2" :class="fieldsForKind(entry.kind).length > 1 ? 'grid-cols-2' : 'grid-cols-1'">
                 <UFormField
                   v-for="field in fieldsForKind(entry.kind)"
@@ -297,8 +288,7 @@ onBeforeRouteLeave(() => {
                 icon="i-lucide-x"
                 variant="ghost"
                 color="neutral"
-                size="sm"
-                class="mt-1"
+                class="min-w-11 justify-center"
                 :disabled="entry.sets.length === 1"
                 :aria-label="`Remove set ${j + 1}`"
                 data-testid="gym-set-remove"
@@ -306,25 +296,43 @@ onBeforeRouteLeave(() => {
               />
             </div>
           </div>
-          <UButton icon="i-lucide-plus" variant="soft" size="sm" class="mt-2" data-testid="gym-set-add" @click="addSet(entry)">
-            Add set
-          </UButton>
+          <div class="mt-3 flex items-center justify-between gap-2 border-t border-default pt-3">
+            <UButton icon="i-lucide-plus" variant="soft" data-testid="gym-set-add" @click="addSet(entry)">
+              Add set
+            </UButton>
+            <UButton
+              icon="i-lucide-replace"
+              variant="ghost"
+              color="neutral"
+              :aria-label="`Swap ${entry.name}`"
+              data-testid="gym-swap"
+              @click="openSwap(i)"
+            >
+              Swap
+            </UButton>
+          </div>
         </UCard>
       </fieldset>
 
       <UAlert v-if="finishError" color="error" variant="soft" :title="finishError" data-testid="gym-finish-error" />
 
-      <UButton
-        block
-        size="xl"
-        icon="i-lucide-flag"
-        :loading="finishing"
-        :disabled="doneCount === 0"
-        data-testid="gym-finish"
-        @click="finish"
+      <!-- On phones Finish sticks above the bottom nav, within thumb reach. -->
+      <div
+        class="max-nav:sticky max-nav:bottom-(--bottom-nav-height) max-nav:z-10 max-nav:-mx-[21px] max-nav:border-t max-nav:border-default max-nav:bg-default/95 max-nav:px-[21px] max-nav:py-3 max-nav:backdrop-blur"
+        data-testid="finish-bar"
       >
-        Finish workout ({{ doneCount }} {{ doneCount === 1 ? 'set' : 'sets' }} done)
-      </UButton>
+        <UButton
+          block
+          size="xl"
+          icon="i-lucide-flag"
+          :loading="finishing"
+          :disabled="doneCount === 0"
+          data-testid="gym-finish"
+          @click="finish"
+        >
+          Finish workout ({{ doneCount }} {{ doneCount === 1 ? 'set' : 'sets' }} done)
+        </UButton>
+      </div>
 
       <SwapExerciseModal
         v-model:open="swapOpen"

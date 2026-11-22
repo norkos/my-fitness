@@ -36,7 +36,7 @@ describe('plan import API', () => {
     ])
 
     const listed = (await app.request('/api/workouts', { cookie })).body
-    expect(listed).toEqual([{ id: res.body.id, date: '2026-11-18', sessionType: 'trainer', status: 'draft', exerciseCount: 2 }])
+    expect(listed).toEqual([{ id: res.body.id, date: '2026-11-18', sessionType: 'trainer', status: 'draft', exerciseCount: 2, setCount: 3, exerciseNames: ['Dumbbell bench press', 'Plank'] }])
   })
 
   it('rejects a duplicate new name and creates nothing', async () => {

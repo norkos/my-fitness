@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test'
-import { createDraft, createExercise, createWorkout, expectNoHorizontalScroll, loginAndWaitForHome, unique } from './helpers'
+import { createDraft, createExercise, createWorkout, expectNoHorizontalScroll, loginAndWaitForHome, openHomeTab, unique } from './helpers'
 
 test.beforeEach(async ({ page }) => {
   await loginAndWaitForHome(page)
@@ -190,9 +190,11 @@ test('finishes a partly done plan into a workout with only the done sets', async
   await expect(page.getByTestId('progress-history-item')).toHaveCount(1)
 
   await page.getByTestId('nav-workouts').click()
+  await openHomeTab(page, 'History')
   // Matched by link rather than date: reruns against the same database leave other plans behind.
   const history = page.getByTestId('workout-item').filter({ has: page.locator(`a[href="/workouts/${plan.id}"]`) })
   await expect(history).toContainText(plan.dateLabel)
+  await openHomeTab(page, 'Planned')
   await expect(page.getByTestId('planned-item').filter({ has: page.locator(`a[href="/workouts/${plan.id}/edit"]`) })).toHaveCount(0)
 })
 
@@ -207,4 +209,38 @@ test('refuses to finish while a done set misses a value', async ({ page }) => {
   await expect(page.getByTestId('gym-finish-error')).toContainText('missing values')
   await expect(first).toContainText('Weight is required')
   await expect(page.getByTestId('gym-mode')).toBeVisible()
+})
+
+test('opens progress over gym mode keeping ticked sets, and Finish stays reachable', async ({ page }) => {
+  const plan = await planWorkout(page)
+  await page.goto(`/workouts/${plan.id}/gym`)
+  await expect(page.getByTestId('gym-mode')).toBeVisible()
+
+  const bench = entry(page, plan.bench)
+  await expect(bench.getByTestId('gym-entry-number')).toHaveText('01')
+  await expect(entry(page, plan.plank).getByTestId('gym-entry-number')).toHaveText('02')
+  const first = bench.getByTestId('gym-set').first()
+  await first.getByTestId('gym-set-done').click()
+  await expect(first).toHaveAttribute('data-done', 'true')
+  await saved(page)
+
+  await bench.getByTestId('gym-entry-progress').click()
+  const sheet = page.getByRole('dialog')
+  await expect(sheet).toContainText(plan.bench)
+  await expect(sheet.getByTestId('progress-empty')).toBeVisible()
+  await page.keyboard.press('Escape')
+  await expect(sheet).toBeHidden()
+  await expect(page).toHaveURL(new RegExp(`/workouts/${plan.id}/gym$`))
+  await expect(first).toHaveAttribute('data-done', 'true')
+  await expect(bench.getByTestId('gym-set').nth(1)).toHaveAttribute('data-done', 'false')
+
+  // Scrolled to the last set, Finish sits above the bottom nav and can be tapped
+  await entry(page, plan.plank).getByTestId('gym-set').last().scrollIntoViewIfNeeded()
+  const finish = page.getByTestId('gym-finish')
+  await expect(finish).toBeInViewport()
+  const finishBox = (await finish.boundingBox())!
+  const navBox = (await page.getByTestId('bottom-nav').boundingBox())!
+  expect(finishBox.y + finishBox.height).toBeLessThanOrEqual(navBox.y)
+  await finish.click()
+  await expect(page).toHaveURL(new RegExp(`/workouts/${plan.id}$`))
 })
