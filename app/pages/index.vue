@@ -51,7 +51,7 @@ const tabs = computed(() => [
       :content="false"
       variant="link"
       class="w-full"
-      :ui="{ trigger: 'min-h-11 flex-1', label: 'text-base' }"
+      :ui="{ list: 'justify-start gap-7 px-0', trigger: 'min-h-11 grow-0 px-0.5', label: 'text-base', trailingBadgeSize: 'md' }"
       data-testid="home-tabs"
     />
 
@@ -75,7 +75,7 @@ const tabs = computed(() => [
       <section v-else aria-label="Workout history">
         <div v-if="history.length" class="space-y-2">
           <ListCountRow label="YOUR PREVIOUS SESSIONS" :count="history.length" noun="workout" />
-          <ul class="divide-y divide-default overflow-hidden rounded-[10px] border border-default bg-white" data-testid="workout-list">
+          <ul class="space-y-2.5" data-testid="workout-list">
             <WorkoutCard v-for="workout in history" :key="workout.id" :workout="workout" variant="history" />
           </ul>
         </div>

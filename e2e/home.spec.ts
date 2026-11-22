@@ -43,7 +43,7 @@ test('opens on History without drafts, with an empty state, then lists workouts 
       { exerciseId: rowing, sets: [{ durationS: 600, distanceM: 2000 }] },
     ],
   })
-  await createWorkout(page, { date: '2026-03-04', sessionType: 'solo', exercises: [{ exerciseId: rowing, sets: [{ durationS: 300 }] }] })
+  const march4 = await createWorkout(page, { date: '2026-03-04', sessionType: 'solo', exercises: [{ exerciseId: rowing, sets: [{ durationS: 300 }] }] })
 
   await page.goto('/')
   await expect(tab(page, 'History')).toHaveAttribute('aria-selected', 'true')
@@ -59,6 +59,22 @@ test('opens on History without drafts, with an empty state, then lists workouts 
   await expect(items.nth(2)).toContainText('1 Mar 2026')
   await expect(items.nth(2).getByTestId('workout-item-count')).toHaveText('1 exercise · 1 set')
   await expectNoHorizontalScroll(page)
+
+  // Each workout is its own bordered card, one link at least 44px tall, with space between cards
+  const boxes = []
+  for (let i = 0; i < 3; i++) {
+    const links = items.nth(i).locator('a')
+    await expect(links).toHaveCount(1)
+    expect(await links.evaluate(a => Number.parseFloat(getComputedStyle(a).borderTopWidth))).toBeGreaterThan(0)
+    const box = (await links.boundingBox())!
+    expect(box.height).toBeGreaterThanOrEqual(44)
+    boxes.push(box)
+  }
+  for (let i = 1; i < 3; i++) expect(boxes[i]!.y - (boxes[i - 1]!.y + boxes[i - 1]!.height)).toBeGreaterThanOrEqual(4)
+
+  // Tapping the icon tile area (left edge of the card) opens that workout
+  await items.nth(1).locator('a > span[aria-hidden="true"]').first().click()
+  await expect(page).toHaveURL(new RegExp(`/workouts/${march4}$`))
 })
 
 test('opens on Planned with drafts, soonest first, previewing exercises', async ({ page }) => {
@@ -115,6 +131,22 @@ async function expectPlannedTab(page: Page, later: number, sooner: number, names
   expect(order.indexOf(`/workouts/${sooner}/edit`)).toBeLessThan(order.indexOf(`/workouts/${later}/edit`))
   await expectNoHorizontalScroll(page)
 
+  // One action row: Edit plan as a text link on the left, a compact Start in gym on the right
+  const cardBox = (await soonerCard.boundingBox())!
+  const editBox = (await soonerCard.getByTestId('planned-item-edit').boundingBox())!
+  const gymBox = (await soonerCard.getByTestId('planned-item-gym').boundingBox())!
+  expect(Math.abs((editBox.y + editBox.height / 2) - (gymBox.y + gymBox.height / 2))).toBeLessThanOrEqual(3)
+  expect(editBox.x + editBox.width).toBeLessThanOrEqual(gymBox.x)
+  expect(gymBox.width).toBeLessThan(cardBox.width / 2)
+  expect(editBox.height).toBeGreaterThanOrEqual(44)
+  expect(gymBox.height).toBeGreaterThanOrEqual(44)
+
+  // Edit plan opens that draft in the plan editor
+  await soonerCard.getByTestId('planned-item-edit').click()
+  await expect(page).toHaveURL(new RegExp(`/workouts/${sooner}/edit$`))
+  await page.goto('/')
+  await openHomeTab(page, 'Planned')
+
   // Drafts stay out of the history
   await openHomeTab(page, 'History')
   await expect(page).toHaveURL(/\?tab=history$/)
@@ -134,6 +166,21 @@ test('shows the page heading with eyebrow and subtitle', async ({ page }) => {
   await expect(page.getByTestId('page-subtitle')).toHaveText('Plan your session. Log your progress.')
   await expect(page.getByTestId('new-workout')).toBeVisible()
   await expectNoHorizontalScroll(page)
+})
+
+test('tabs sit at the left, each as wide as its label', async ({ page }) => {
+  await loginAndWaitForHome(page)
+  const heading = (await page.getByRole('heading', { level: 1, name: 'Workouts', exact: true }).boundingBox())!
+  const content = (await page.getByTestId('home').boundingBox())!
+  const planned = (await tab(page, 'Planned').boundingBox())!
+  const history = (await tab(page, 'History').boundingBox())!
+  expect(Math.abs(planned.x - heading.x)).toBeLessThanOrEqual(1)
+  expect(Math.abs(planned.y - history.y)).toBeLessThanOrEqual(1)
+  expect(history.x).toBeGreaterThan(planned.x + planned.width)
+  // Well short of the right edge: the tabs no longer split the row in half
+  expect(history.x + history.width).toBeLessThan(content.x + content.width - 80)
+  expect(planned.height).toBeGreaterThanOrEqual(44)
+  expect(history.height).toBeGreaterThanOrEqual(44)
 })
 
 test('Back from a workout keeps the History tab selected', async ({ page }) => {
