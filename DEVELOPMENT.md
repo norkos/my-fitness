@@ -122,6 +122,8 @@ npm ci
 npm run dev        # http://localhost:3000 with hot reload, reads .env
 ```
 
+Changes go through OpenSpec: the specs in `openspec/specs/` are the authoritative description of behaviour, and each change (including each item of the README roadmap) is proposed, applied and archived under `openspec/changes/`. The phone-screen design canvas is a visual target only; where it disagrees with the specs, the specs win.
+
 Database schema changes: edit `server/db/schema.ts`, then run `npm run db:generate` and commit the generated migration in `server/db/migrations/`. Migrations are applied automatically on startup. `0001_drafts_and_videos` added `workouts.status` (`draft` or `done`; existing workouts became `done`), `sets.completed` and `exercises.video_url`.
 
 ### Planned workouts and gym mode

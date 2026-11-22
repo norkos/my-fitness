@@ -76,7 +76,7 @@ Every feature is covered by automated tests at three levels: logic, API, and rea
 
 ## Roadmap
 
-A new design for the phone screens, the "My Fitness App" design canvas, is the visual target for the next round of work. It is a target, not a contract: the specs in `openspec/specs/` stay authoritative, and where the two disagree, the specs win. Each item below ships as its own OpenSpec change.
+A new design for the phone screens guides the next round of work. It is a target, not a contract: where the design and the app's agreed behaviour disagree, the behaviour wins. Each item below ships on its own.
 
 ### Visual alignment
 
