@@ -85,3 +85,37 @@ docker compose up --build
 Open http://localhost:3000, or `http://<your-pc-ip>:3000` from your phone on the same Wi-Fi.
 
 Configuration, phone access, tests and development are all in the **[Development Guide](DEVELOPMENT.md)**.
+
+## Roadmap
+
+A new design for the phone screens, the "My Fitness App" design canvas, is the visual target for the next round of work. It is a target, not a contract: the specs in `openspec/specs/` stay authoritative, and where the two disagree, the specs win. Each item below ships as its own OpenSpec change.
+
+### Visual alignment
+
+In implementation order:
+
+- [ ] Page headings and section labels (eyebrow line, title with a green dot, subtitle, count row above lists)
+- [ ] Workouts home: tabs sized to their text, an "Edit plan" text link plus a compact "Start in gym" button, history as separate cards with icon tiles
+- [ ] Exercises list: compact rows, icon tile tinted per exercise kind
+- [ ] Gym mode: set grid column headers, filled done check, tinted "last time" box
+- [ ] Progress opens as a bottom sheet from the Exercises list (chart kept)
+- [ ] New/edit exercise sheet: 2x2 kind toggles, "Optional" hint on the video link
+- [ ] Bottom navigation icons
+
+### Features suggested by the design
+
+Each of these needs its own decision before it is built:
+
+- [ ] Remove an exercise in gym mode
+- [ ] Delete a plan from gym mode
+- [ ] Shorter dates (no year for the current year)
+
+### Deliberate deviations from the design
+
+These stay as they are, even where the design differs:
+
+- Text is never smaller than 12 px.
+- Muted text keeps a contrast of at least 4.5:1.
+- Log out stays.
+- The progress chart stays.
+- Gym mode keeps showing the workout date and the save status.
