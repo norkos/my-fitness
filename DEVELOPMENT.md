@@ -89,6 +89,7 @@ For E2E outside Docker, run `npx playwright install chromium` once, then:
 ```bash
 npm run test:e2e:local                                     # build, then E2E against a throwaway server
 npm run test:e2e:local -- --no-build e2e/import.spec.ts -g "rejects"   # reuse the build, one test
+npm run build && npm run screenshots                          # regenerate README screenshots (made-up data, throwaway DB)
 ```
 
 It starts the production build on a free port with a temporary database and test credentials (never your `.env` or `./data`), runs Playwright and stops the server again. To test against an app you started yourself: `E2E_BASE_URL=http://localhost:3000 E2E_USERNAME=... E2E_PASSWORD=... npm run test:e2e`.
