@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { createExercise, createWorkout, expectNoHorizontalScroll, loginAndWaitForHome, pickExercise, unique } from './helpers'
+import { createExercise, createWorkout, expectNoHorizontalScroll, loginAndWaitForHome, pickExercise, recordRequests, unique } from './helpers'
 
 test.beforeEach(async ({ page }) => {
   await loginAndWaitForHome(page)
@@ -147,4 +147,19 @@ test('numbers exercise cards and opens progress over the editor without losing t
   await expect(page).toHaveURL(/\/workouts\/new$/)
 
   expect((await page.request.delete(`/api/workouts/${previous}`)).status()).toBe(204)
+})
+
+test('shows "Workout not found" for a malformed or unknown address', async ({ page }) => {
+  const requests = recordRequests(page, path => path.startsWith('/api/workouts/'))
+  // `..%2Fexercises` is a path-like id that must not reach another endpoint.
+  for (const id of ['abc', '..%2Fexercises']) {
+    for (const address of [`/workouts/${id}`, `/workouts/${id}/edit`, `/workouts/${id}/gym`]) {
+      await page.goto(address)
+      await expect(page.getByText('Workout not found')).toBeVisible()
+    }
+  }
+  expect(requests).toEqual([])
+
+  await page.goto('/workouts/999999999')
+  await expect(page.getByText('Workout not found')).toBeVisible()
 })

@@ -1,9 +1,14 @@
 <script setup lang="ts">
+import { parsePositiveId } from '#shared/ids'
 import type { WorkoutDetail } from '#shared/workouts'
 
 const route = useRoute()
 const api = useApi()
-const { data: workout, error } = await useAsyncData(`workout-edit-${route.params.id}`, () => api<WorkoutDetail>(`/api/workouts/${route.params.id}`))
+const id = parsePositiveId(route.params.id)
+// A malformed id is shown as not found, without a request.
+const { data: workout, error } = await useAsyncData(`workout-edit-${id ?? 'invalid'}`, () => id === undefined
+  ? Promise.reject(createError({ statusCode: 404, statusMessage: 'Workout not found' }))
+  : api<WorkoutDetail>(`/api/workouts/${id}`))
 
 const planned = computed(() => workout.value?.status === 'draft')
 </script>
@@ -11,7 +16,7 @@ const planned = computed(() => workout.value?.status === 'draft')
 <template>
   <div class="space-y-4">
     <UButton
-      :to="planned ? '/' : `/workouts/${route.params.id}`"
+      :to="planned || id === undefined ? '/' : `/workouts/${id}`"
       icon="i-lucide-arrow-left"
       variant="ghost"
       color="neutral"

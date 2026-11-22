@@ -27,7 +27,7 @@ describe('parseId', () => {
     expect(parseId('42')).toBe(42)
   })
 
-  it.each(['0', '-1', '1.5', 'abc', undefined])('treats %s as not found', (value) => {
+  it.each(['0', '-1', '1.5', 'abc', '1e2', ' 42 ', undefined])('treats %s as not found', (value) => {
     expect(() => parseId(value, 'Workout')).toThrow('Workout not found')
   })
 })

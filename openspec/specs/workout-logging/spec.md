@@ -253,6 +253,10 @@ The system SHALL let the user start a new draft from any done workout. The new d
 - **WHEN** the plan screen is asked to repeat a workout that no longer exists
 - **THEN** the system tells the user the workout could not be loaded and offers an empty plan instead
 
+#### Scenario: Malformed source address
+- **WHEN** the plan screen is opened with a source that is not a positive whole number, such as `..`, `abc`, `0`, `-3` or `1.5`
+- **THEN** the system makes no request for it, tells the user the workout could not be loaded and offers an empty plan instead
+
 ### Requirement: Home screen tabs
 The home screen SHALL show New workout as its primary action, Plan workout and Import plan as secondary actions, and Planned and History tabs, each labelled with its number of workouts. The tabs SHALL sit side by side at the left edge, each only as wide as its label and count, and each at least 44 px tall. It SHALL open on Planned when at least one draft exists and on History otherwise. The selected tab SHALL be kept when the user navigates back to the home screen.
 
@@ -294,3 +298,14 @@ In the workout editor and in gym mode, each exercise SHALL be shown as a numbere
 #### Scenario: Invalid value keeps input
 - **WHEN** the user enters reps of 8.5 in a set and saves
 - **THEN** that reps field is highlighted with an error and every entered value stays on screen
+
+### Requirement: Unknown workout address
+The system SHALL show "Workout not found" when the workout view, edit or gym mode screen is opened with an address whose workout id is not a positive whole number, without requesting any data for it.
+
+#### Scenario: Malformed workout id
+- **WHEN** the user opens the workout view for the address id `..%2Fexercises`
+- **THEN** the system shows "Workout not found" and requests no workout
+
+#### Scenario: Unknown but well-formed id
+- **WHEN** the user opens the workout view for id 999999999, which does not exist
+- **THEN** the system shows "Workout not found"

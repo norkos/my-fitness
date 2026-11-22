@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { Exercise } from '#shared/exercises'
 import { formatDate, formatSets } from '#shared/format'
+import { parsePositiveId } from '#shared/ids'
 import { fieldsForKind, type ExerciseKind } from '#shared/kinds'
 import { draftToValues, EMPTY_SET_DRAFT, fieldUnit, valuesToDraft, type SetDraft } from '#shared/set-form'
 import { swapSets } from '#shared/swap'
@@ -9,9 +10,12 @@ import { validateWorkout, type LastTime, type WorkoutDetail, type WorkoutInput }
 const route = useRoute()
 const api = useApi()
 const toast = useToast()
-const id = Number(route.params.id)
+const id = parsePositiveId(route.params.id)
 
-const { data: workout, error } = await useAsyncData(`workout-gym-${id}`, () => api<WorkoutDetail>(`/api/workouts/${id}`))
+// A malformed id is shown as not found, without a request. Later calls run only once the workout has loaded.
+const { data: workout, error } = await useAsyncData(`workout-gym-${id ?? 'invalid'}`, () => id === undefined
+  ? Promise.reject(createError({ statusCode: 404, statusMessage: 'Workout not found' }))
+  : api<WorkoutDetail>(`/api/workouts/${id}`))
 const { data: exercises, refresh: refreshExercises } = await useAsyncData('exercises', () => api<Exercise[]>('/api/exercises'), { default: () => [] })
 
 type GymSet = SetDraft & { completed: boolean }
@@ -186,7 +190,7 @@ onBeforeRouteLeave(() => {
 
 <template>
   <div class="space-y-4" data-testid="gym-mode">
-    <UButton :to="`/workouts/${id}/edit`" icon="i-lucide-arrow-left" variant="ghost" color="neutral" size="sm">Plan</UButton>
+    <UButton :to="id === undefined ? '/' : `/workouts/${id}/edit`" icon="i-lucide-arrow-left" variant="ghost" color="neutral" size="sm">Plan</UButton>
 
     <UAlert v-if="error" color="error" variant="soft" title="Workout not found" />
     <UAlert

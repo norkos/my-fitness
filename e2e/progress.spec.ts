@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test'
-import { createExercise, createWorkout, expectNoHorizontalScroll, loginAndWaitForHome, unique } from './helpers'
+import { createExercise, createWorkout, expectNoHorizontalScroll, loginAndWaitForHome, recordRequests, unique } from './helpers'
 
 test.beforeEach(async ({ page }) => {
   await loginAndWaitForHome(page)
@@ -55,4 +55,14 @@ test('opens progress from an exercise in a workout view', async ({ page }) => {
   await page.getByTestId('workout-view-exercise').click()
   await expect(page.getByTestId('progress-title')).toHaveText(name)
   await expect(page.getByTestId('progress-latest')).toHaveText('1:00')
+})
+
+test('shows "Exercise not found" for a malformed or unknown address', async ({ page }) => {
+  const requests = recordRequests(page, path => path.endsWith('/progress') || path.includes('/workouts/'))
+  await page.goto('/exercises/..%2F..%2Fworkouts%2F1')
+  await expect(page.getByText('Exercise not found')).toBeVisible()
+  expect(requests).toEqual([])
+
+  await page.goto('/exercises/999999999')
+  await expect(page.getByText('Exercise not found')).toBeVisible()
 })
