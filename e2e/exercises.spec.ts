@@ -159,3 +159,33 @@ test('a long name with a video link fits a 360px row', async ({ page }) => {
   }
   await expectNoHorizontalScroll(page)
 })
+
+test('opens with the page heading, eyebrow and subtitle', async ({ page }) => {
+  await expect(page.getByRole('heading', { level: 1, name: 'Exercises', exact: true })).toBeVisible()
+  await expect(page.getByTestId('page-eyebrow')).toHaveText('YOUR EXERCISE LIBRARY')
+  await expect(page.getByTestId('page-subtitle')).toHaveText('Your movements, last time\'s numbers, and progress.')
+  await expect(page.getByTestId('exercise-add')).toBeVisible()
+})
+
+test('the count row follows the search, singular for one match', async ({ page }) => {
+  // A shared suffix keeps the search clear of exercises other tests created in the same database.
+  const tag = unique('').trim()
+  for (const [name, kind] of [[`Bench press ${tag}`, 'weight_reps'], [`Back squat ${tag}`, 'weight_reps'], [`Plank ${tag}`, 'timed']] as const) {
+    await createExercise(page, name, kind)
+  }
+  await page.reload()
+  const row = page.getByTestId('list-count')
+  await expect(page.getByTestId('exercises')).toContainText('YOUR EXERCISES')
+
+  await page.getByTestId('exercise-search').fill(`squat ${tag}`)
+  await expect(page.getByTestId('exercise-item')).toHaveCount(1)
+  await expect(row).toHaveText('1 exercise')
+  await expect(page.getByTestId('exercise-count')).toHaveText('1 exercise')
+
+  await page.getByTestId('exercise-search').fill(tag)
+  await expect(row).toHaveText('3 exercises')
+
+  await page.getByTestId('exercise-search').fill(`zzz ${tag}`)
+  await expect(page.getByTestId('exercises-no-match')).toBeVisible()
+  await expect(row).toHaveCount(0)
+})

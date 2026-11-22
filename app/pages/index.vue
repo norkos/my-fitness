@@ -32,10 +32,9 @@ const tabs = computed(() => [
 
 <template>
   <div class="space-y-5" data-testid="home">
-    <div class="flex items-center justify-between gap-3">
-      <h1 class="text-2xl font-extrabold tracking-tight text-highlighted">Workouts</h1>
+    <PageHeader eyebrow="YOUR GYM NOTEBOOK" title="Workouts" subtitle="Plan your session. Log your progress.">
       <UButton to="/workouts/new" icon="i-lucide-plus" size="lg" data-testid="new-workout">New workout</UButton>
-    </div>
+    </PageHeader>
 
     <div class="grid grid-cols-2 gap-2">
       <UButton to="/workouts/plan" icon="i-lucide-calendar-plus" variant="outline" color="neutral" block class="bg-white" data-testid="new-draft">
@@ -58,9 +57,12 @@ const tabs = computed(() => [
 
     <template v-if="status !== 'pending'">
       <section v-if="tab === 'planned'" aria-label="Planned workouts">
-        <ul v-if="planned.length" class="space-y-3" data-testid="planned">
-          <WorkoutCard v-for="workout in planned" :key="workout.id" :workout="workout" variant="planned" />
-        </ul>
+        <div v-if="planned.length" class="space-y-2">
+          <ListCountRow label="READY WHEN YOU ARE" :count="planned.length" noun="workout" />
+          <ul class="space-y-3" data-testid="planned">
+            <WorkoutCard v-for="workout in planned" :key="workout.id" :workout="workout" variant="planned" />
+          </ul>
+        </div>
         <div v-else class="rounded-[10px] border border-dashed border-default p-8 text-center space-y-3" data-testid="planned-empty">
           <p class="text-muted">No planned workouts. Plan one ahead or import your trainer's plan.</p>
           <div class="flex flex-wrap justify-center gap-2">
@@ -71,13 +73,12 @@ const tabs = computed(() => [
       </section>
 
       <section v-else aria-label="Workout history">
-        <ul
-          v-if="history.length"
-          class="divide-y divide-default overflow-hidden rounded-[10px] border border-default bg-white"
-          data-testid="workout-list"
-        >
-          <WorkoutCard v-for="workout in history" :key="workout.id" :workout="workout" variant="history" />
-        </ul>
+        <div v-if="history.length" class="space-y-2">
+          <ListCountRow label="YOUR PREVIOUS SESSIONS" :count="history.length" noun="workout" />
+          <ul class="divide-y divide-default overflow-hidden rounded-[10px] border border-default bg-white" data-testid="workout-list">
+            <WorkoutCard v-for="workout in history" :key="workout.id" :workout="workout" variant="history" />
+          </ul>
+        </div>
         <div v-else class="rounded-[10px] border border-dashed border-default p-8 text-center space-y-3" data-testid="workouts-empty">
           <p class="text-muted">No workouts yet. Completed workouts will appear here.</p>
           <UButton to="/workouts/new" icon="i-lucide-plus">Log your first workout</UButton>

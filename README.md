@@ -94,7 +94,7 @@ A new design for the phone screens, the "My Fitness App" design canvas, is the v
 
 In implementation order:
 
-- [ ] Page headings and section labels (eyebrow line, title with a green dot, subtitle, count row above lists)
+- [x] Page headings and section labels (eyebrow line, title with a green dot, subtitle, count row above lists)
 - [ ] Workouts home: tabs sized to their text, an "Edit plan" text link plus a compact "Start in gym" button, history as separate cards with icon tiles
 - [ ] Exercises list: compact rows, icon tile tinted per exercise kind
 - [ ] Gym mode: set grid column headers, filled done check, tinted "last time" box

@@ -202,8 +202,9 @@ onBeforeRouteLeave(() => {
     </UAlert>
 
     <template v-else-if="workout">
+      <PageHeader eyebrow="FOLLOW YOUR PLAN" title="Gym mode" subtitle="Adjust the numbers. Tick the sets you actually do." />
       <div class="flex items-center gap-2">
-        <h1 class="text-xl font-semibold flex-1">{{ formatDate(workout.date) }}</h1>
+        <p class="flex-1 text-lg font-semibold text-highlighted" data-testid="gym-date">{{ formatDate(workout.date) }}</p>
         <SessionBadge :type="workout.sessionType" />
       </div>
       <p

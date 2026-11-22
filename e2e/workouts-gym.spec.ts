@@ -57,6 +57,20 @@ test('ticks a set with changed values, saves it at once and keeps it after a rel
   await page.getByTestId('start-gym').click()
   await expect(page.getByTestId('gym-mode')).toBeVisible()
 
+  // Page heading, then the workout's date, session type and save status right below it
+  const heading = page.getByRole('heading', { level: 1, name: 'Gym mode', exact: true })
+  await expect(heading).toBeVisible()
+  await expect(page.getByTestId('page-eyebrow')).toHaveText('FOLLOW YOUR PLAN')
+  await expect(page.getByTestId('page-subtitle')).toHaveText('Adjust the numbers. Tick the sets you actually do.')
+  await expect(page.getByTestId('gym-date')).toContainText(plan.dateLabel)
+  await expect(page.getByTestId('session-badge')).toHaveText('Trainer')
+  await expect(page.getByTestId('save-status')).toBeVisible()
+  const headingBottom = (await heading.boundingBox())!
+  for (const below of ['gym-date', 'session-badge', 'save-status']) {
+    const box = (await page.getByTestId(below).boundingBox())!
+    expect(box.y).toBeGreaterThanOrEqual(headingBottom.y + headingBottom.height)
+  }
+
   const bench = entry(page, plan.bench)
   await expect(bench.getByTestId('gym-set')).toHaveCount(3)
   await expect(bench.getByTestId('video-link')).toHaveAttribute('href', 'https://example.com/videos/dumbbell-press')

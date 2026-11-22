@@ -82,6 +82,33 @@ test.describe('phone (360px)', () => {
     }
   })
 
+  test('page heading and count row text is at least 12px', async ({ page }) => {
+    // The draft gives home a planned list (and so a count row); Exercises has its catalog.
+    const { id } = await planOneExercise(page)
+    const screens = [
+      { path: '/?tab=planned', countRows: 1 },
+      { path: '/exercises', countRows: 1 },
+      { path: `/workouts/${id}/gym`, countRows: 0 },
+    ]
+    for (const { path, countRows } of screens) {
+      await page.goto(path)
+      await page.waitForLoadState('networkidle')
+      await expect(page.getByTestId('page-eyebrow')).toBeVisible()
+      await expect(page.getByTestId('list-count')).toHaveCount(countRows)
+      const sizes = await page.evaluate(() => {
+        const rows = [...document.querySelectorAll<HTMLElement>('[data-testid="list-count"]')]
+        const elements = [
+          document.querySelector<HTMLElement>('[data-testid="page-eyebrow"]')!,
+          document.querySelector<HTMLElement>('[data-testid="page-subtitle"]')!,
+          // Each count row: the count and its label
+          ...rows.flatMap(el => [el, ...[...el.parentElement!.children] as HTMLElement[]]),
+        ]
+        return elements.map(el => ({ text: el.textContent?.trim(), px: Number.parseFloat(getComputedStyle(el).fontSize) }))
+      })
+      for (const { text, px } of sizes) expect(px, `${path}: "${text}"`).toBeGreaterThanOrEqual(12)
+    }
+  })
+
   test('the last item on the page scrolls clear of the bottom bar', async ({ page }) => {
     await page.goto('/exercises')
     await page.waitForLoadState('networkidle')

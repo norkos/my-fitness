@@ -20,7 +20,6 @@ const filtered = computed(() => {
   const q = query.value.trim().toLocaleLowerCase()
   return q ? exercises.value.filter(e => e.name.toLocaleLowerCase().includes(q)) : exercises.value
 })
-const countLabel = computed(() => `${filtered.value.length} ${filtered.value.length === 1 ? 'exercise' : 'exercises'}`)
 
 // Create
 const createOpen = ref(false)
@@ -105,10 +104,9 @@ async function saveEdit() {
 
 <template>
   <div class="space-y-5" data-testid="exercises">
-    <div class="flex items-center justify-between gap-3">
-      <h1 class="text-2xl font-extrabold tracking-tight text-highlighted">Exercises</h1>
+    <PageHeader eyebrow="YOUR EXERCISE LIBRARY" title="Exercises" subtitle="Your movements, last time's numbers, and progress.">
       <UButton icon="i-lucide-plus" size="lg" data-testid="exercise-add" @click="openCreate">Add exercise</UButton>
-    </div>
+    </PageHeader>
 
     <div v-if="status !== 'pending' && !exercises.length" class="rounded-[10px] border border-dashed border-default p-8 text-center space-y-3" data-testid="exercises-empty">
       <p class="text-muted">No exercises yet. Add the ones you do.</p>
@@ -116,67 +114,67 @@ async function saveEdit() {
     </div>
 
     <template v-else-if="exercises.length">
-      <div class="space-y-2">
-        <UInput
-          v-model="query"
-          icon="i-lucide-search"
-          placeholder="Search exercises"
-          aria-label="Search exercises"
-          class="w-full"
-          size="xl"
-          :ui="{ base: 'bg-white' }"
-          data-testid="exercise-search"
-        >
-          <template v-if="query" #trailing>
-            <UButton
-              icon="i-lucide-x"
-              variant="link"
-              color="neutral"
-              class="min-w-11 justify-center"
-              aria-label="Clear search"
-              data-testid="exercise-search-clear"
-              @click="query = ''"
-            />
-          </template>
-        </UInput>
-        <p class="text-sm text-muted" data-testid="exercise-count">{{ countLabel }}</p>
-      </div>
+      <UInput
+        v-model="query"
+        icon="i-lucide-search"
+        placeholder="Search exercises"
+        aria-label="Search exercises"
+        class="w-full"
+        size="xl"
+        :ui="{ base: 'bg-white' }"
+        data-testid="exercise-search"
+      >
+        <template v-if="query" #trailing>
+          <UButton
+            icon="i-lucide-x"
+            variant="link"
+            color="neutral"
+            class="min-w-11 justify-center"
+            aria-label="Clear search"
+            data-testid="exercise-search-clear"
+            @click="query = ''"
+          />
+        </template>
+      </UInput>
 
       <div v-if="!filtered.length" class="rounded-[10px] border border-dashed border-default p-8 text-center space-y-3" data-testid="exercises-no-match">
         <p class="text-muted">No exercises match "{{ query.trim() }}".</p>
         <UButton variant="outline" color="neutral" data-testid="exercise-search-reset" @click="query = ''">Clear search</UButton>
       </div>
 
-      <ul v-else class="divide-y divide-default overflow-hidden rounded-[10px] border border-default bg-white" data-testid="exercise-list">
-        <li v-for="exercise in filtered" :key="exercise.id" class="flex items-center gap-2 py-2 pl-3 pr-1 nav:gap-3 nav:pl-4 nav:pr-2" data-testid="exercise-item">
-          <span class="grid size-8 nav:size-10 shrink-0 place-items-center rounded-md bg-primary/10 text-primary" aria-hidden="true">
-            <UIcon :name="KIND_ICONS[exercise.kind]" class="size-4 nav:size-5" />
-          </span>
-          <div class="min-w-0 flex-1">
-            <div class="font-semibold text-highlighted break-words" data-testid="exercise-item-name">{{ exercise.name }}</div>
-            <div class="text-sm text-muted" :data-testid="`kind-badge-${exercise.kind}`">{{ KIND_DEFINITIONS[exercise.kind].label }}</div>
-          </div>
-          <VideoLink :url="exercise.videoUrl" :name="exercise.name" />
-          <UButton
-            :to="`/exercises/${exercise.id}`"
-            icon="i-lucide-chart-line"
-            variant="ghost"
-            color="neutral"
-            class="min-w-11 justify-center"
-            :aria-label="`Progress: ${exercise.name}`"
-            data-testid="exercise-link"
-          />
-          <UButton
-            icon="i-lucide-pencil"
-            variant="ghost"
-            color="neutral"
-            class="min-w-11 justify-center"
-            :aria-label="`Edit ${exercise.name}`"
-            data-testid="exercise-edit"
-            @click="openEdit(exercise)"
-          />
-        </li>
-      </ul>
+      <div v-else class="space-y-2">
+        <ListCountRow label="YOUR EXERCISES" :count="filtered.length" noun="exercise" count-testid="exercise-count" />
+        <ul class="divide-y divide-default overflow-hidden rounded-[10px] border border-default bg-white" data-testid="exercise-list">
+          <li v-for="exercise in filtered" :key="exercise.id" class="flex items-center gap-2 py-2 pl-3 pr-1 nav:gap-3 nav:pl-4 nav:pr-2" data-testid="exercise-item">
+            <span class="grid size-8 nav:size-10 shrink-0 place-items-center rounded-md bg-primary/10 text-primary" aria-hidden="true">
+              <UIcon :name="KIND_ICONS[exercise.kind]" class="size-4 nav:size-5" />
+            </span>
+            <div class="min-w-0 flex-1">
+              <div class="font-semibold text-highlighted break-words" data-testid="exercise-item-name">{{ exercise.name }}</div>
+              <div class="text-sm text-muted" :data-testid="`kind-badge-${exercise.kind}`">{{ KIND_DEFINITIONS[exercise.kind].label }}</div>
+            </div>
+            <VideoLink :url="exercise.videoUrl" :name="exercise.name" />
+            <UButton
+              :to="`/exercises/${exercise.id}`"
+              icon="i-lucide-chart-line"
+              variant="ghost"
+              color="neutral"
+              class="min-w-11 justify-center"
+              :aria-label="`Progress: ${exercise.name}`"
+              data-testid="exercise-link"
+            />
+            <UButton
+              icon="i-lucide-pencil"
+              variant="ghost"
+              color="neutral"
+              class="min-w-11 justify-center"
+              :aria-label="`Edit ${exercise.name}`"
+              data-testid="exercise-edit"
+              @click="openEdit(exercise)"
+            />
+          </li>
+        </ul>
+      </div>
     </template>
 
     <AppSheet v-model:open="createOpen" title="Add exercise">
