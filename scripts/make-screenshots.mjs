@@ -1,30 +1,46 @@
 // Generates the README screenshots from the production build with a throwaway database and made-up data.
 //   npm run build && node scripts/make-screenshots.mjs
-// Never touches .env or ./data. Output: docs/screenshots/*.png (phone-sized, 2x).
+// Never touches .env or ./data, and ignores NUXT_* / NITRO_* variables inherited from the shell:
+// only the settings below configure the server. Output: docs/screenshots/*.png (phone-sized, 2x).
+// Stops with a non-zero exit, before creating any data, when the server does not become healthy.
 import { spawn } from 'node:child_process'
 import { mkdirSync, mkdtempSync, rmSync } from 'node:fs'
-import { createServer } from 'node:net'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { chromium } from '@playwright/test'
+import { freePort, serverEnv, waitForHealth } from './lib/local-server.mjs'
 
 const USERNAME = 'demo'
 const PASSWORD = 'demo-password-123'
 const OUT = 'docs/screenshots'
 
-const port = await new Promise((resolve) => {
-  const srv = createServer().listen(0, '127.0.0.1', () => { const p = srv.address().port; srv.close(() => resolve(p)) })
-})
+const port = await freePort()
 const url = `http://127.0.0.1:${port}`
 const dir = mkdtempSync(join(tmpdir(), 'my-fitness-shots-'))
+let serverLog = ''
 const server = spawn(process.execPath, ['.output/server/index.mjs'], {
-  env: {
-    ...process.env, NODE_ENV: 'production', PORT: String(port), HOST: '127.0.0.1',
+  env: serverEnv({
+    NODE_ENV: 'production', PORT: String(port), HOST: '127.0.0.1',
     NUXT_APP_USERNAME: USERNAME, NUXT_APP_PASSWORD: PASSWORD,
     NUXT_APP_SECRET: 'demo-secret-that-is-at-least-32-characters-long',
     NUXT_DATABASE_PATH: join(dir, 'fitness.db'), NUXT_SESSION_COOKIE_SECURE: 'false',
-  },
+  }),
 })
+server.stdout.on('data', (d) => { serverLog += d })
+server.stderr.on('data', (d) => { serverLog += d })
+
+async function stopServer() {
+  server.kill()
+  await new Promise(r => (server.exitCode !== null || server.signalCode !== null ? r() : server.once('exit', r)))
+  rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 })
+}
+
+// Another process may answer on the port if ours failed to start; never log in or create data then.
+if (!(await waitForHealth(url, server))) {
+  console.error(`Server did not become healthy:\n${serverLog.slice(-4000)}`)
+  await stopServer()
+  process.exit(1)
+}
 
 const iso = (offsetDays) => {
   const d = new Date(); d.setDate(d.getDate() + offsetDays)
@@ -33,10 +49,6 @@ const iso = (offsetDays) => {
 
 let browser
 try {
-  for (let i = 0; i < 60; i++) {
-    try { if ((await fetch(`${url}/api/health`)).ok) break } catch { /* not up yet */ }
-    await new Promise(r => setTimeout(r, 500))
-  }
   mkdirSync(OUT, { recursive: true })
   browser = await chromium.launch()
   const context = await browser.newContext({ baseURL: url, viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, isMobile: true, hasTouch: true })
@@ -122,7 +134,5 @@ try {
 }
 finally {
   await browser?.close()
-  server.kill()
-  await new Promise(r => (server.exitCode !== null ? r() : server.once('exit', r)))
-  rmSync(dir, { recursive: true, force: true, maxRetries: 10, retryDelay: 200 })
+  await stopServer()
 }

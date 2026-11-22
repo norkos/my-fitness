@@ -1,4 +1,5 @@
 import type { z } from 'zod'
+import { parsePositiveId } from '../../shared/ids'
 import { toFieldErrors, type FieldErrors } from '../../shared/validation'
 
 export type ServiceErrorCode = 'validation' | 'not_found' | 'conflict'
@@ -35,9 +36,9 @@ export function parseInput<T>(schema: z.ZodType<T>, input: unknown): T {
   return result.data
 }
 
-/** Parses a positive integer route parameter, treating anything else as not found. */
+/** Parses a route id of plain decimal digits (see `parsePositiveId`), treating anything else as not found. */
 export function parseId(value: unknown, what = 'Item'): number {
-  const id = Number(value)
-  if (!Number.isInteger(id) || id <= 0) throw new ServiceError('not_found', `${what} not found`)
+  const id = parsePositiveId(value)
+  if (id === undefined) throw new ServiceError('not_found', `${what} not found`)
   return id
 }

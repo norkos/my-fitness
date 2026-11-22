@@ -7,7 +7,11 @@ import { formatProgress, type ExerciseProgress as ProgressData } from '#shared/p
  * Rendered by the progress page and, inside a sheet, by the workout editor and gym mode.
  */
 const props = withDefaults(defineProps<{
-  exerciseId: number | string
+  /**
+   * Undefined when the address held no valid id: shown as not found, without a request.
+   * Read once at setup; callers remount the component (`:key`) to show another exercise.
+   */
+  exerciseId: number | undefined
   /** Show the name and kind as a heading (the sheet shows them in its own title instead). */
   showTitle?: boolean
   /** Link history rows to their workouts. Off inside the editors, where leaving would drop unsaved input. */
@@ -17,9 +21,12 @@ const props = withDefaults(defineProps<{
 const api = useApi()
 
 // Not awaited: inside a sheet this component mounts after the page's Suspense has resolved.
+const exerciseId = props.exerciseId
 const { data, error } = useAsyncData(
-  `progress-${props.exerciseId}`,
-  () => api<ProgressData>(`/api/exercises/${props.exerciseId}/progress`),
+  `progress-${exerciseId ?? 'invalid'}`,
+  () => exerciseId === undefined
+    ? Promise.reject(createError({ statusCode: 404, statusMessage: 'Exercise not found' }))
+    : api<ProgressData>(`/api/exercises/${exerciseId}/progress`),
 )
 
 const NuxtLink = resolveComponent('NuxtLink')

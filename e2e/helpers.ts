@@ -57,3 +57,14 @@ export async function openHomeTab(page: Page, name: 'Planned' | 'History') {
   await tab.click()
   await expect(tab).toHaveAttribute('aria-selected', 'true')
 }
+
+/** Records the paths of the page's fetch/XHR requests that match, to check that none were made. */
+export function recordRequests(page: Page, matches: (path: string) => boolean): string[] {
+  const seen: string[] = []
+  page.on('request', (request) => {
+    if (!['fetch', 'xhr'].includes(request.resourceType())) return
+    const path = new URL(request.url()).pathname
+    if (matches(path)) seen.push(path)
+  })
+  return seen
+}

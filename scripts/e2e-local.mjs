@@ -1,14 +1,15 @@
 // Runs the E2E suite against the production build with a throwaway database and test credentials,
-// so the real .env and data are never touched. Prints a short summary; Playwright's failure details
+// so the real .env and data are never touched. NUXT_* / NITRO_* variables inherited from the shell are
+// ignored: only the settings below configure the server. Prints a short summary; Playwright's failure details
 // are shown only for failing tests.
 //   npm run test:e2e:local                      build, start, test, stop
 //   npm run test:e2e:local -- --no-build        reuse the existing .output
 //   npm run test:e2e:local -- e2e/import.spec.ts -g "rejects"   extra arguments go to Playwright
 import { spawn } from 'node:child_process'
 import { existsSync, mkdtempSync, rmSync } from 'node:fs'
-import { createServer } from 'node:net'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
+import { freePort, serverEnv, waitForHealth } from './lib/local-server.mjs'
 
 const args = process.argv.slice(2)
 const build = !args.includes('--no-build')
@@ -33,31 +34,6 @@ function run({ cmd, args: cmdArgs, shell = false }, options = {}) {
   })
 }
 
-function freePort() {
-  return new Promise((resolve, reject) => {
-    const srv = createServer()
-    srv.on('error', reject)
-    srv.listen(0, '127.0.0.1', () => {
-      const { port } = srv.address()
-      srv.close(() => resolve(port))
-    })
-  })
-}
-
-async function waitForHealth(url, server) {
-  for (let i = 0; i < 60; i++) {
-    if (server.exitCode !== null) return false
-    try {
-      if ((await fetch(`${url}/api/health`)).ok) return true
-    }
-    catch {
-      // not up yet
-    }
-    await new Promise(r => setTimeout(r, 500))
-  }
-  return false
-}
-
 if (build) {
   console.log('Building...')
   const code = await run(npm(['run', 'build']), { stdio: ['ignore', 'ignore', 'inherit'] })
@@ -73,8 +49,7 @@ const port = await freePort()
 const url = `http://127.0.0.1:${port}`
 let serverLog = ''
 const server = spawn(process.execPath, ['.output/server/index.mjs'], {
-  env: {
-    ...process.env,
+  env: serverEnv({
     NODE_ENV: 'production',
     PORT: String(port),
     HOST: '127.0.0.1',
@@ -83,7 +58,7 @@ const server = spawn(process.execPath, ['.output/server/index.mjs'], {
     NUXT_APP_SECRET: 'e2e-secret-that-is-at-least-32-characters-long',
     NUXT_DATABASE_PATH: join(dir, 'fitness.db'),
     NUXT_SESSION_COOKIE_SECURE: 'false',
-  },
+  }),
 })
 server.stdout.on('data', (d) => { serverLog += d })
 server.stderr.on('data', (d) => { serverLog += d })

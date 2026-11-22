@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { parsePositiveId } from '#shared/ids'
 import type { WorkoutDetail } from '#shared/workouts'
 
 // Remount on a query change, so moving between `?from=` addresses loads the new source.
@@ -8,13 +9,14 @@ const route = useRoute()
 const api = useApi()
 
 // `?from=<id>` repeats a done workout: its exercises and achieved values pre-fill the new plan.
-const rawFrom = route.query.from
-const fromId = rawFrom === undefined ? undefined : String((Array.isArray(rawFrom) ? rawFrom[0] : rawFrom) ?? '')
-const { data: loaded } = fromId
-  ? await useAsyncData(`workout-repeat-${fromId}`, () => api<WorkoutDetail>(`/api/workouts/${encodeURIComponent(fromId)}`).catch(() => null))
+// A malformed id is treated like a missing workout, without a request.
+const hasFrom = route.query.from !== undefined
+const fromId = parsePositiveId(route.query.from)
+const { data: loaded } = fromId !== undefined
+  ? await useAsyncData(`workout-repeat-${fromId}`, () => api<WorkoutDetail>(`/api/workouts/${fromId}`).catch(() => null))
   : { data: ref<WorkoutDetail | null>(null) }
 const source = computed(() => (loaded.value?.status === 'done' ? loaded.value : undefined))
-const sourceMissing = computed(() => fromId !== undefined && !source.value)
+const sourceMissing = computed(() => hasFrom && !source.value)
 </script>
 
 <template>

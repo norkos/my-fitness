@@ -1,11 +1,16 @@
 <script setup lang="ts">
 import { formatDate, formatSet } from '#shared/format'
+import { parsePositiveId } from '#shared/ids'
 import type { WorkoutDetail } from '#shared/workouts'
 
 const route = useRoute()
 const api = useApi()
+const id = parsePositiveId(route.params.id)
 
-const { data: workout, error } = await useAsyncData(`workout-${route.params.id}`, () => api<WorkoutDetail>(`/api/workouts/${route.params.id}`))
+// A malformed id is shown as not found, without a request.
+const { data: workout, error } = await useAsyncData(`workout-${id ?? 'invalid'}`, () => id === undefined
+  ? Promise.reject(createError({ statusCode: 404, statusMessage: 'Workout not found' }))
+  : api<WorkoutDetail>(`/api/workouts/${id}`))
 
 // A planned workout has no results to show yet; it is viewed and changed in its editor.
 if (workout.value?.status === 'draft') {

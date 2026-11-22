@@ -90,6 +90,16 @@ describe('workouts API', () => {
   it('returns 404 for unknown workouts', async () => {
     expect((await app.request('/api/workouts/9999', { cookie })).status).toBe(404)
     expect((await app.request('/api/workouts/x', { cookie })).status).toBe(404)
+    expect((await app.request('/api/workouts/1e2', { cookie })).status).toBe(404)
+    // An existing id in exponent form must not resolve to that workout.
+    const existing = (await create(trainerSession('2026-11-19'))).body.id
+    try {
+      expect((await app.request(`/api/workouts/${existing}`, { cookie })).status).toBe(200)
+      expect((await app.request(`/api/workouts/${existing}e0`, { cookie })).status).toBe(404)
+    }
+    finally {
+      await app.request(`/api/workouts/${existing}`, { method: 'DELETE', cookie })
+    }
     expect((await app.request('/api/workouts/9999', { method: 'DELETE', cookie })).status).toBe(404)
     expect((await app.request('/api/workouts/9999', { method: 'PUT', cookie, body: trainerSession('2026-11-15') })).status).toBe(404)
   })

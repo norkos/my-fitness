@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test'
 import type { WorkoutDetail, WorkoutSummary } from '../shared/workouts'
-import { createDraft, createExercise, createWorkout, expectNoHorizontalScroll, loginAndWaitForHome, openHomeTab, pickExercise, unique } from './helpers'
+import { createDraft, createExercise, createWorkout, expectNoHorizontalScroll, loginAndWaitForHome, openHomeTab, pickExercise, recordRequests, unique } from './helpers'
 
 test.beforeEach(async ({ page }) => {
   await loginAndWaitForHome(page)
@@ -188,4 +188,15 @@ test('repeating stores nothing until saved, and a missing source falls back to a
   await expect(page.getByTestId('repeat-missing')).toBeVisible()
   await expect(page.getByTestId('workout-form')).toBeVisible()
   await expect(page.getByTestId('workout-entry')).toHaveCount(0)
+})
+
+test('a malformed source is treated as missing without requesting it', async ({ page }) => {
+  const requests = recordRequests(page, path => path.startsWith('/api/workouts/'))
+  for (const from of ['..', 'abc']) {
+    await page.goto(`/workouts/plan?from=${from}`)
+    await expect(page.getByTestId('repeat-missing')).toBeVisible()
+    await expect(page.getByTestId('workout-form')).toBeVisible()
+    await expect(page.getByTestId('workout-entry')).toHaveCount(0)
+  }
+  expect(requests).toEqual([])
 })
