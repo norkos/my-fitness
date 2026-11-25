@@ -20,7 +20,7 @@ async function expectTouchTargets(page: Page) {
 async function planOneExercise(page: Page) {
   const name = unique('Squat')
   const exerciseId = await createExercise(page, name, 'weight_reps')
-  const id = await createDraft(page, { date: '2031-03-14', sessionType: 'solo', exercises: [{ exerciseId, sets: [{ weightKg: 60, reps: 5 }] }] })
+  const id = await createDraft(page, { date: '2032-06-14', sessionType: 'solo', exercises: [{ exerciseId, sets: [{ weightKg: 60, reps: 5 }] }] })
   return { id, exerciseId, name }
 }
 
