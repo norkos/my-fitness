@@ -1,6 +1,6 @@
 ---
 name: diff-reviewer
-description: "Reviews one slice of uncommitted or branch changes (e.g. one OpenSpec task group) for correctness bugs, security issues and violations of this repo's rules, and returns a short ranked list of findings. Use after each task group during /opsx:apply, not only at the end. Read-only."
+description: "Reviews one slice of uncommitted or branch changes (e.g. one OpenSpec task group) for correctness bugs, security issues and violations of this repo's rules, and returns a short ranked list of findings. During /opsx:apply, use once on the whole change in the final integration group, and after a task group only when it touches server/, shared/ or nuxt.config.ts. Read-only."
 tools: Bash, Read, Grep, Glob
 model: sonnet
 ---

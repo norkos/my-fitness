@@ -19,6 +19,11 @@ Single-user gym tracker: Nuxt 4 SPA + Nitro API, SQLite via Drizzle, Nuxt UI. Se
 ## Workflow
 
 - Changes go through OpenSpec: `/opsx:explore` → `/opsx:propose` → `/opsx:apply` → `/opsx:archive`. State lives in `openspec/`, so `/clear` between phases is safe.
-- During `/opsx:apply`, run the `diff-reviewer` sub-agent after each task group, and `verifier` before marking a group done.
+- During `/opsx:apply`, have `verifier` run each group's targeted checks before marking it done, and run `diff-reviewer` on a group only when it touches `server/`, `shared/` or `nuxt.config.ts`. The final integration group reviews the whole change and runs `npm run verify -- --e2e`.
 - Prefer the Edit tool for multi-line edits; shell heredocs with quotes break in Git Bash.
 - Schema change: edit `server/db/schema.ts`, then `npm run db:generate`; commit the migration.
+
+## Practices
+
+- When a change touches a large page (`app/pages/workouts/[id]/gym.vue`, `app/components/WorkoutForm.vue`, `app/pages/workouts/import.vue`), move the logic it touches into a composable in `app/composables/`.
+- Use Opus for `/opsx:explore` and `/opsx:propose`, and Sonnet for `/opsx:apply` when `tasks.md` is clear.
