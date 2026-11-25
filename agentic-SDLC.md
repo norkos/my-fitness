@@ -63,6 +63,54 @@ Ask in one line, for example *"commit on a branch, push and open a PR"* or *"com
 
 Runs steps 2 to 5 end to end with a team of agents and stops at an open PR. Give it one requirement: a roadmap issue (`/deliver #9`) or a sentence (`/deliver show the rest timer in gym mode`). The steps are in `.claude/commands/deliver.md`.
 
+```mermaid
+flowchart TD
+    REQ(["/deliver #N or a sentence"]) --> S0
+
+    S0["<b>0 · Delivery Lead</b><br/>clean tree, gh auth, read the issue,<br/>branch feat/change-name from main"]
+    S0 --> S1
+
+    S1["<b>1 · Architect</b> (Opus agent)<br/>/opsx:propose<br/>proposal, spec deltas, tasks<br/>records its decisions"]
+    S1 --> S2
+
+    S2["<b>2 · SME</b> (Sonnet agent)<br/>reviews against specs, CLAUDE.md,<br/>README and the design canvas<br/>fixes ordinary gaps itself"]
+    S2 --> S2A
+
+    S2A{{"<b>2a · Product Manager</b> (you)<br/>object to any Architect decision?<br/>pick an option per deviation"}}
+    S2A -->|"answers"| FOLD["SME folds the answers in<br/>openspec validate --strict"]
+    FOLD --> S3
+
+    S3["<b>3 · Full Stack Software Engineer</b> (Sonnet agent)<br/>/opsx:apply, every task<br/>targeted checks per task group"]
+    S3 --> S4
+
+    S4["<b>4 · Second Software Engineer</b><br/>diff-reviewer + verifier<br/>npm run verify with E2E"]
+    S4 -->|"blocking or important findings<br/>(at most 2 rounds)"| S3
+    S4 -->|"findings left after 2 rounds"| ENG{{"Engineering question<br/>to you"}}
+    ENG --> S3
+    S4 -->|"approved"| S5
+
+    S5["<b>5 · Software Engineer</b> (Sonnet agent)<br/>/opsx:archive + spec sync<br/>commit, push, open the PR"]
+    S5 --> S6
+
+    S6["<b>6 · Delivery Lead</b><br/>report: PR link, decisions,<br/>nits left, screenshots"]
+    S6 --> MERGE(["You review and merge the PR<br/>the issue closes"])
+
+    S1 -.->|"BLOCKED"| DL{"Delivery Lead:<br/>bug or ambiguity within the spec?"}
+    S3 -.->|"BLOCKED"| DL
+    DL -.->|"yes: decides"| RESUME["resume the blocked agent<br/>with the answer"]
+    DL -.->|"no"| ASK{{"Product Manager (you)<br/>answers"}}
+    ASK -.-> RESUME
+
+    classDef you fill:#fde68a,stroke:#b45309,color:#1f2937
+    classDef lead fill:#bfdbfe,stroke:#1d4ed8,color:#1f2937
+    classDef agent fill:#d1fae5,stroke:#047857,color:#1f2937
+    class REQ,S2A,ENG,ASK,MERGE you
+    class S0,S6,DL,RESUME lead
+    class S1,S2,FOLD,S3,S4,S5 agent
+```
+
+Yellow: you, the Product Manager. Blue: the main session, the Delivery Lead. Green: sub-agents. Dashed arrows: an agent stops with `BLOCKED` instead of guessing. Every stage's state lives in `openspec/changes/<change>/`, so each agent starts cold from the files, not from the conversation.
+
 | Stage | Role | Who | Does |
 |---|---|---|---|
 | 0 | Delivery Lead | the main session | Reads the requirement (and its issue), checks the working tree is clean, branches `feat/<change>` from `origin/main` |
