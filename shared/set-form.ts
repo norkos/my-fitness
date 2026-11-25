@@ -1,4 +1,4 @@
-import { KIND_DEFINITIONS, type ExerciseKind, type SetField } from './kinds'
+import { fieldsForKind, KIND_DEFINITIONS, type ExerciseKind, type SetField } from './kinds'
 import type { SetValues } from './workouts'
 
 /** Text-field state for one set in the workout form. */
@@ -16,6 +16,18 @@ export function fieldUnit(kind: ExerciseKind, field: SetField): string {
   if (field === 'reps') return 'reps'
   if (field === 'durationS') return usesMinutes(kind, field) ? 'min' : 's'
   return 'm'
+}
+
+/** Column header in gym mode: the unit in capitals (KG, +KG, REPS, S, MIN, M). */
+export function fieldHeader(kind: ExerciseKind, field: SetField): string {
+  return fieldUnit(kind, field).toUpperCase()
+}
+
+/** Gym mode field order: weight before reps when both are present (bodyweight); other kinds unchanged. */
+export function gymFieldsForKind(kind: ExerciseKind): SetField[] {
+  const fields = fieldsForKind(kind)
+  if (!fields.includes('weightKg') || !fields.includes('reps')) return fields
+  return ['weightKg', 'reps', ...fields.filter(f => f !== 'weightKg' && f !== 'reps')]
 }
 
 export function isFieldRequired(kind: ExerciseKind, field: SetField): boolean {

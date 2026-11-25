@@ -107,6 +107,7 @@ These stay as they are, even where the design differs:
 - Log out stays.
 - The progress chart stays.
 - Gym mode keeps showing the workout date and the save status.
+- The gym-mode done check is filled with the brand green (#278054) rather than the design's lighter green, so the white check keeps at least 4.5:1 contrast.
 
 ## Try it
 

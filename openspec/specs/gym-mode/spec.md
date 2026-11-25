@@ -18,12 +18,12 @@ The system SHALL let the user open a draft in gym mode, where each set can be ma
 - **THEN** the video opens in a new browser tab and gym mode stays open in the original tab
 
 ### Requirement: Gym mode set layout
-In gym mode each exercise SHALL show its last-time values in a tinted box between its name and its sets. Its sets SHALL form a grid under one header row: the set number, one column per value of the exercise's kind labelled with its unit, and done. Each done control SHALL be at least 44 px square: filled with the brand colour and a check mark when done, an empty outlined box when not. Header and last-time text SHALL be at least 12 px.
+In gym mode each exercise SHALL show a tinted box under its name reading "Last time: " plus its previous sets without a date, or "No previous record". Its sets SHALL form a grid under a header row: set number, one column per value of its kind labelled with its unit in capitals, and done; bodyweight shows weight before reps. Done controls SHALL be at least 44 px square: brand-filled with a check when done, empty when not. Header and last-time text SHALL be at least 12 px.
 
 #### Scenario: Column headers follow the kind
 - **WHEN** a draft has Bench Press (weight x reps), Push-ups (bodyweight) and Plank (timed, in seconds) and the user opens it in gym mode
 - **THEN** Bench Press's sets are headed SET, KG, REPS, DONE
-- **AND** Push-ups's sets are headed SET, REPS, +KG, DONE
+- **AND** Push-ups's sets are headed SET, +KG, REPS, DONE and each set's weight input comes before its reps input
 - **AND** Plank's sets are headed SET, S, DONE
 
 #### Scenario: Done check filled
@@ -32,8 +32,8 @@ In gym mode each exercise SHALL show its last-time values in a tinted box betwee
 - **AND** the second set's done control stays an outlined, unfilled box and reports itself as unchecked
 
 #### Scenario: Last-time box
-- **WHEN** Bench Press was last done on 10 Nov 2026 as 40 kg x 10, 40 kg x 8 and the user opens a later draft with it in gym mode
-- **THEN** a tinted box under its name reads "Last time (Tue, 10 Nov 2026): 40kg x 10, 40kg x 8"
+- **WHEN** Bench Press was last done as 40 kg x 10, 40 kg x 8 and the user opens a later draft with it in gym mode
+- **THEN** a tinted box under its name reads "Last time: 40 kg × 10 · 40 kg × 8"
 - **AND** an exercise never done before shows "No previous record" in the same box
 
 #### Scenario: Grid on a phone

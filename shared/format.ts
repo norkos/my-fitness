@@ -39,6 +39,13 @@ export function formatSets(kind: ExerciseKind, sets: SetValues[]): string {
   return sets.map(s => formatSet(kind, s)).join(', ')
 }
 
+/** Gym-mode "last time" values: weight x reps as "70 kg × 8" (`formatSet` when a value is missing), other kinds as `formatSet`, joined with " · ". */
+export function formatLastTimeSets(kind: ExerciseKind, sets: SetValues[]): string {
+  return sets
+    .map(s => (kind === 'weight_reps' && s.weightKg != null && s.reps != null ? `${formatNumber(s.weightKg)} kg × ${s.reps}` : formatSet(kind, s)))
+    .join(' · ')
+}
+
 /** "Sun, 15 Nov 2026" for a YYYY-MM-DD calendar date, independent of the device time zone. */
 export function formatDate(isoDate: string): string {
   return new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' })
