@@ -130,7 +130,7 @@ test('set grid has column headers per kind', async ({ page }) => {
 
   const expected: { name: string, header: string, columns: string[] }[] = [
     { name: press, header: 'SET KG REPS DONE', columns: ['gym-set-weightKg', 'gym-set-reps'] },
-    { name: pushUps, header: 'SET REPS +KG DONE', columns: ['gym-set-reps', 'gym-set-weightKg'] },
+    { name: pushUps, header: 'SET +KG REPS DONE', columns: ['gym-set-weightKg', 'gym-set-reps'] },
     { name: hold, header: 'SET S DONE', columns: ['gym-set-durationS'] },
   ]
   for (const { name, header, columns } of expected) {
@@ -209,7 +209,7 @@ test('swaps an exercise in place, keeping planned sets for the same kind', async
   const swapped = entry(page, recent)
   await expect(swapped.getByTestId('gym-set')).toHaveCount(3)
   await expect(swapped.getByTestId('gym-set-weightKg').first()).toHaveValue('12.5')
-  await expect(swapped.getByTestId('gym-entry-last')).toContainText('8kg x 15')
+  await expect(swapped.getByTestId('gym-entry-last')).toHaveText('Last time: 8 kg × 15')
   await saved(page)
   await page.reload()
   await expect(page.getByTestId('gym-entry-name').first()).toHaveText(recent)

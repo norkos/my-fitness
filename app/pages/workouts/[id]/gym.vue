@@ -42,19 +42,13 @@ const entries = ref<GymEntry[]>(
     sets: toGymSets(e.kind, e.sets),
   })),
 )
-// Kept apart from `entries` so loading it does not count as a change to save.
-const lastTimes = ref<Record<number, LastTime | undefined>>({})
+const { lastTimes, loadLast: loadLastTime } = useLastTimes()
 const errors = ref<Record<string, string>>({})
 const finishError = ref('')
 
-async function loadLast(entry: GymEntry) {
-  if (!workout.value) return
-  try {
-    lastTimes.value[entry.key] = await api<LastTime>(`/api/exercises/${entry.exerciseId}/last`, { query: { before: workout.value.date } })
-  }
-  catch {
-    lastTimes.value[entry.key] = undefined
-  }
+function loadLast(entry: GymEntry) {
+  if (!workout.value) return Promise.resolve()
+  return loadLastTime(entry.key, entry.exerciseId, workout.value.date)
 }
 onMounted(() => {
   entries.value.forEach(loadLast)

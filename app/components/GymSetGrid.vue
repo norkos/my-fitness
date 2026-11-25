@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { fieldsForKind, type ExerciseKind } from '#shared/kinds'
-import { fieldUnit, type SetDraft } from '#shared/set-form'
+import type { ExerciseKind } from '#shared/kinds'
+import { fieldHeader, fieldUnit, gymFieldsForKind, type SetDraft } from '#shared/set-form'
 
 /** A set in gym mode: its editable values plus whether it was done. */
 export type GymSet = SetDraft & { completed: boolean }
@@ -18,7 +18,7 @@ const props = defineProps<{
 }>()
 const sets = defineModel<GymSet[]>('sets', { required: true })
 
-const fields = computed(() => fieldsForKind(props.kind))
+const fields = computed(() => gymFieldsForKind(props.kind))
 
 // Static class names so Tailwind generates them: set number, one column per value, done, remove.
 const GRID_COLUMNS: Record<number, string> = {
@@ -41,20 +41,20 @@ function removeSet(index: number) {
 <template>
   <div class="space-y-2">
     <div
-      class="grid gap-2 text-center text-xs tracking-wider text-muted"
+      class="grid gap-2.5 text-center text-xs tracking-wider text-muted"
       :class="columns"
       aria-hidden="true"
       data-testid="gym-set-header"
     >
       <span>SET</span>
-      <span v-for="field in fields" :key="field">{{ fieldUnit(kind, field).toUpperCase() }}</span>
+      <span v-for="field in fields" :key="field">{{ fieldHeader(kind, field) }}</span>
       <span>DONE</span>
       <span />
     </div>
     <div
       v-for="(set, j) in sets"
       :key="j"
-      class="grid items-start gap-2 rounded-md"
+      class="grid items-start gap-2.5 rounded-md"
       :class="[columns, set.completed ? 'bg-success/10' : '']"
       :data-done="set.completed"
       data-testid="gym-set"

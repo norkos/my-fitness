@@ -3,6 +3,7 @@ import {
   formatDate,
   formatDistance,
   formatDuration,
+  formatLastTimeSets,
   formatNumber,
   formatSet,
   formatSets,
@@ -65,6 +66,23 @@ describe('formatting', () => {
     expect(toIsoDate(new Date(2026, 0, 5, 23, 30))).toBe('2026-01-05')
     expect(tomorrowIsoDate(new Date(2026, 0, 31, 23, 30))).toBe('2026-02-01')
     expect(tomorrowIsoDate(new Date(2026, 11, 31, 8, 0))).toBe('2027-01-01')
+  })
+})
+
+describe('formatLastTimeSets', () => {
+  it('formats weight x reps sets joined with a middle dot', () => {
+    expect(formatLastTimeSets('weight_reps', [set({ weightKg: 70, reps: 8 }), set({ weightKg: 70, reps: 6 })])).toBe('70 kg × 8 · 70 kg × 6')
+    expect(formatLastTimeSets('weight_reps', [set({ weightKg: 12.5, reps: 10 })])).toBe('12.5 kg × 10')
+  })
+
+  it('falls back to the standard set format when weight or reps is missing', () => {
+    expect(formatLastTimeSets('weight_reps', [set({ reps: 8 })])).toBe(formatSet('weight_reps', set({ reps: 8 })))
+    expect(formatLastTimeSets('weight_reps', [set({ weightKg: 70 })])).toBe(formatSet('weight_reps', set({ weightKg: 70 })))
+  })
+
+  it('uses the standard set format for other kinds', () => {
+    expect(formatLastTimeSets('bodyweight', [set({ reps: 8, weightKg: 5 }), set({ reps: 6 })])).toBe('8 reps +5kg · 6 reps')
+    expect(formatLastTimeSets('timed', [set({ durationS: 45 }), set({ durationS: 90 })])).toBe('45s · 1:30')
   })
 })
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { formatDate, formatSets } from '#shared/format'
+import { formatLastTimeSets } from '#shared/format'
 import type { ExerciseKind } from '#shared/kinds'
 import type { LastTime } from '#shared/workouts'
 
@@ -18,7 +18,7 @@ defineProps<{
     data-testid="gym-entry-last"
   >
     <UIcon name="i-lucide-clock" class="mt-px size-3.5 shrink-0" aria-hidden="true" />
-    <span v-if="last.date">Last time ({{ formatDate(last.date) }}): {{ formatSets(kind, last.sets) }}</span>
+    <span v-if="last.date">Last time: {{ formatLastTimeSets(kind, last.sets) }}</span>
     <span v-else>No previous record</span>
   </div>
 </template>
