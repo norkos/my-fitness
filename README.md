@@ -85,7 +85,7 @@ In implementation order:
 - [x] Page headings and section labels (eyebrow line, title with a green dot, subtitle, count row above lists)
 - [x] Workouts home: tabs sized to their text, an "Edit plan" text link plus a compact "Start in gym" button, history as separate cards with icon tiles
 - [x] Exercises list: compact rows, icon tile tinted per exercise kind (#7)
-- [ ] Gym mode: set grid column headers, filled done check, tinted "last time" box (#8)
+- [x] Gym mode: set grid column headers, filled done check, tinted "last time" box (#8)
 - [ ] Progress opens as a bottom sheet from the Exercises list (chart kept) (#9)
 - [ ] New/edit exercise sheet: 2x2 kind toggles, "Optional" hint on the video link (#10)
 - [ ] Bottom navigation icons (#11)

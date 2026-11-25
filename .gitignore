@@ -45,11 +45,14 @@ logs/
 *.swp
 *~
 
-# Agentic dev (project sub-agents in .claude/agents/ are shared; everything else stays local)
+# Agentic dev (project sub-agents in .claude/agents/ and the /deliver command are shared; everything else stays local)
 .agents
 .opencode/
 .claude/*
 !.claude/agents/
+!.claude/commands/
+.claude/commands/*
+!.claude/commands/deliver.md
 skills-lock.json
 
 # Private terms for scripts/check-repo-hygiene.mjs; never commit

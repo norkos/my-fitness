@@ -59,6 +59,27 @@ Ask in one line, for example *"commit on a branch, push and open a PR"* or *"com
 - The pre-commit hook runs the hygiene check on every commit.
 - CI runs hygiene, lint, typecheck, unit and API tests, and the Docker E2E suite.
 
+## Automated: `/deliver <requirement>`
+
+Runs steps 2 to 5 end to end with a team of agents and stops at an open PR. Give it one requirement: a roadmap issue (`/deliver #9`) or a sentence (`/deliver show the rest timer in gym mode`). The steps are in `.claude/commands/deliver.md`.
+
+| Stage | Role | Who | Does |
+|---|---|---|---|
+| 0 | Product Manager | the main session | Reads the requirement (and its issue), checks the working tree is clean, branches `feat/<change>` from `origin/main` |
+| 1 | Architect | Opus agent | `/opsx:propose`: proposal, spec deltas, tasks; decides open questions and records them in the proposal |
+| 2 | SME | Sonnet agent | Reviews the proposal against the specs, `CLAUDE.md`, the README roadmap and the design; fixes ordinary gaps, reports true deviations |
+| 2a | Product Manager | the main session | Asks you about true deviations only, then hands your answers back to the SME |
+| 3 | Full Stack Software Engineer | Sonnet agent | `/opsx:apply`: implements every task and runs the checks |
+| 4 | Second Software Engineer | `diff-reviewer` and `verifier` | Reviews the whole change; findings go back to stage 3 (at most two rounds), then `npm run verify -- --e2e` |
+| 5 | Software Engineer | Sonnet agent | `/opsx:archive` with spec sync, refreshes README screenshots if a shown screen changed, commits, pushes, opens the PR with `Closes #N` |
+| 6 | Product Manager | the main session | Reports the PR link and the decisions made without you |
+
+You are only asked when the SME finds a true deviation: a change that contradicts an existing spec, breaks a repo rule, differs from the design where the README does not list the difference as deliberate, or goes beyond the requirement. Nothing is merged; you review and merge the PR.
+
+- Start from a clean working tree; the Product Manager stops otherwise.
+- Sub-agents cannot start sub-agents, so the main session runs `verifier` and `diff-reviewer`.
+- Run it in a session on Opus (the Product Manager judges the review findings); the other roles set their own models.
+
 ## Running checks yourself
 
 | Goal | Command |
