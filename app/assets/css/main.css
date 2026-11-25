@@ -71,6 +71,10 @@
   --color-tile-cardio-bg: #ebf1f5;
   --color-tile-cardio-border: #dde6ed;
   --color-tile-cardio-icon: #5a7d93;
+
+  /* Gym mode "last time" box (see app/components/LastTimeBox.vue); text is about 5:1 on the background. */
+  --color-last-time-bg: #f7f9f3;
+  --color-last-time-text: #5d6f4d;
 }
 
 :root {

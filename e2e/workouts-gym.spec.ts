@@ -84,6 +84,22 @@ test('ticks a set with changed values, saves it at once and keeps it after a rel
   await first.getByTestId('gym-set-reps').fill('10')
   await first.getByTestId('gym-set-done').click()
   await expect(first).toHaveAttribute('data-done', 'true')
+
+  // Done check: a 44px square, filled when done, an unfilled box when not
+  const doneButton = first.getByTestId('gym-set-done')
+  const notDoneButton = bench.getByTestId('gym-set').nth(1).getByTestId('gym-set-done')
+  await expect(doneButton).toHaveAttribute('aria-checked', 'true')
+  await expect(notDoneButton).toHaveAttribute('aria-checked', 'false')
+  const doneBox = (await doneButton.boundingBox())!
+  expect(doneBox.width).toBeGreaterThanOrEqual(44)
+  expect(doneBox.height).toBeGreaterThanOrEqual(44)
+  const background = (el: Element) => getComputedStyle(el).backgroundColor
+  const notDoneBackground = await notDoneButton.evaluate(background)
+  expect(['rgba(0, 0, 0, 0)', 'transparent', 'rgb(255, 255, 255)']).toContain(notDoneBackground)
+  // Polled: the button's colour change is animated.
+  await expect.poll(() => doneButton.evaluate(background)).not.toBe(notDoneBackground)
+  // The last-time box is tinted
+  expect(await bench.getByTestId('gym-entry-last').evaluate(background)).not.toBe('rgba(0, 0, 0, 0)')
   await saved(page)
 
   await page.reload()
@@ -92,6 +108,46 @@ test('ticks a set with changed values, saves it at once and keeps it after a rel
   await expect(reloaded.getByTestId('gym-set-reps')).toHaveValue('10')
   await expect(reloaded.getByTestId('gym-set-weightKg')).toHaveValue('12.5')
   await expect(entry(page, plan.bench).getByTestId('gym-set').nth(1)).toHaveAttribute('data-done', 'false')
+})
+
+test('set grid has column headers per kind', async ({ page }) => {
+  const press = unique('Press')
+  const pushUps = unique('Push-ups')
+  const hold = unique('Hold')
+  const pressId = await createExercise(page, press, 'weight_reps')
+  const pushUpsId = await createExercise(page, pushUps, 'bodyweight')
+  const holdId = await createExercise(page, hold, 'timed')
+  const id = await createDraft(page, {
+    date: uniqueDate().iso,
+    sessionType: 'solo',
+    exercises: [
+      { exerciseId: pressId, sets: [{ weightKg: 20, reps: 10 }] },
+      { exerciseId: pushUpsId, sets: [{ reps: 15 }] },
+      { exerciseId: holdId, sets: [{ durationS: 30 }] },
+    ],
+  })
+  await page.goto(`/workouts/${id}/gym`)
+
+  const expected: { name: string, header: string, columns: string[] }[] = [
+    { name: press, header: 'SET KG REPS DONE', columns: ['gym-set-weightKg', 'gym-set-reps'] },
+    { name: pushUps, header: 'SET REPS +KG DONE', columns: ['gym-set-reps', 'gym-set-weightKg'] },
+    { name: hold, header: 'SET S DONE', columns: ['gym-set-durationS'] },
+  ]
+  for (const { name, header, columns } of expected) {
+    const card = entry(page, name)
+    // One cell per column; the remove column's header is empty
+    const cells = card.getByTestId('gym-set-header').locator(':scope > *')
+    await expect(cells).toHaveText([...header.split(' '), ''])
+
+    // Each value header and DONE sits centred over its control in the first row
+    const row = card.getByTestId('gym-set').first()
+    const controls = [...columns.map(testId => row.getByTestId(testId)), row.getByTestId('gym-set-done')]
+    for (const [k, control] of controls.entries()) {
+      const cell = (await cells.nth(k + 1).boundingBox())!
+      const box = (await control.boundingBox())!
+      expect(Math.abs((cell.x + cell.width / 2) - (box.x + box.width / 2)), `${header}: column ${k + 1}`).toBeLessThanOrEqual(3)
+    }
+  }
 })
 
 test('shows a change as not saved while offline and saves it once the connection is back', async ({ page }) => {

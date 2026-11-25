@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import type { Exercise } from '#shared/exercises'
-import { formatDate, formatSets } from '#shared/format'
+import { formatDate } from '#shared/format'
 import { parsePositiveId } from '#shared/ids'
-import { fieldsForKind, type ExerciseKind } from '#shared/kinds'
-import { draftToValues, EMPTY_SET_DRAFT, fieldUnit, valuesToDraft, type SetDraft } from '#shared/set-form'
+import type { ExerciseKind } from '#shared/kinds'
+import { draftToValues, EMPTY_SET_DRAFT, valuesToDraft } from '#shared/set-form'
 import { swapSets } from '#shared/swap'
 import { validateWorkout, type LastTime, type WorkoutDetail, type WorkoutInput } from '#shared/workouts'
+import type { GymSet } from '~/components/GymSetGrid.vue'
 
 const route = useRoute()
 const api = useApi()
@@ -17,8 +18,6 @@ const { data: workout, error } = await useAsyncData(`workout-gym-${id ?? 'invali
   ? Promise.reject(createError({ statusCode: 404, statusMessage: 'Workout not found' }))
   : api<WorkoutDetail>(`/api/workouts/${id}`))
 const { data: exercises, refresh: refreshExercises } = await useAsyncData('exercises', () => api<Exercise[]>('/api/exercises'), { default: () => [] })
-
-type GymSet = SetDraft & { completed: boolean }
 
 interface GymEntry {
   key: number
@@ -97,17 +96,9 @@ const STATUS_TEXT = {
   invalid: 'Fix the highlighted values to save',
 } as const
 
-function toggleDone(set: GymSet) {
-  set.completed = !set.completed
-}
-
 function addSet(entry: GymEntry) {
   const previous = entry.sets[entry.sets.length - 1]
   entry.sets.push(previous ? { ...previous, completed: false } : { ...EMPTY_SET_DRAFT, completed: false })
-}
-
-function removeSet(entry: GymEntry, index: number) {
-  entry.sets.splice(index, 1)
 }
 
 // Swap
@@ -237,70 +228,10 @@ onBeforeRouteLeave(() => {
             :kind="entry.kind"
             :video-url="entry.videoUrl"
             testid-prefix="gym-entry"
-          >
-            <div class="mt-0.5 text-sm text-muted" data-testid="gym-entry-last">
-              <template v-if="lastTimes[entry.key]?.date">
-                Last time ({{ formatDate(lastTimes[entry.key]!.date!) }}): {{ formatSets(entry.kind, lastTimes[entry.key]!.sets) }}
-              </template>
-              <template v-else-if="lastTimes[entry.key]">No previous record</template>
-            </div>
-          </ExerciseCardHeader>
+          />
+          <LastTimeBox :kind="entry.kind" :last="lastTimes[entry.key]" class="mt-3" />
 
-          <div class="mt-3 space-y-2">
-            <div
-              v-for="(set, j) in entry.sets"
-              :key="j"
-              class="flex items-start gap-2 rounded-md"
-              :class="set.completed ? 'bg-success/10' : ''"
-              :data-done="set.completed"
-              data-testid="gym-set"
-            >
-              <span class="grid size-7 mt-1.5 shrink-0 place-items-center rounded-full bg-elevated text-xs font-semibold text-muted" aria-hidden="true">{{ j + 1 }}</span>
-              <div class="flex-1 grid gap-2" :class="fieldsForKind(entry.kind).length > 1 ? 'grid-cols-2' : 'grid-cols-1'">
-                <UFormField
-                  v-for="field in fieldsForKind(entry.kind)"
-                  :key="field"
-                  :name="`exercises.${i}.sets.${j}.${field}`"
-                  :error="errors[`exercises.${i}.sets.${j}.${field}`]"
-                >
-                  <UInput
-                    v-model="set[field]"
-                    :inputmode="field === 'weightKg' || fieldUnit(entry.kind, field) === 'min' ? 'decimal' : 'numeric'"
-                    :aria-label="`Set ${j + 1} ${fieldUnit(entry.kind, field)}`"
-                    class="w-full"
-                    size="lg"
-                    :data-testid="`gym-set-${field}`"
-                    :ui="{ trailing: 'pointer-events-none' }"
-                  >
-                    <template #trailing>
-                      <span class="text-xs text-muted">{{ fieldUnit(entry.kind, field) }}</span>
-                    </template>
-                  </UInput>
-                </UFormField>
-              </div>
-              <UButton
-                :icon="set.completed ? 'i-lucide-circle-check' : 'i-lucide-circle'"
-                :color="set.completed ? 'success' : 'neutral'"
-                :variant="set.completed ? 'soft' : 'outline'"
-                size="lg"
-                role="checkbox"
-                :aria-checked="set.completed"
-                :aria-label="`Set ${j + 1} done`"
-                data-testid="gym-set-done"
-                @click="toggleDone(set)"
-              />
-              <UButton
-                icon="i-lucide-x"
-                variant="ghost"
-                color="neutral"
-                class="min-w-11 justify-center"
-                :disabled="entry.sets.length === 1"
-                :aria-label="`Remove set ${j + 1}`"
-                data-testid="gym-set-remove"
-                @click="removeSet(entry, j)"
-              />
-            </div>
-          </div>
+          <GymSetGrid v-model:sets="entry.sets" :kind="entry.kind" :entry-index="i" :errors="errors" class="mt-3" />
           <div class="mt-3 flex items-center justify-between gap-2 border-t border-default pt-3">
             <UButton icon="i-lucide-plus" variant="soft" data-testid="gym-set-add" @click="addSet(entry)">
               Add set

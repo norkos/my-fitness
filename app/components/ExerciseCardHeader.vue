@@ -4,7 +4,7 @@ import type { ExerciseKind } from '#shared/kinds'
 /**
  * Top of an exercise card in the workout editor and gym mode: two-digit number, name, kind, a progress
  * shortcut (opens progress in a sheet over the page) and the video link. The default slot sits under the
- * name, for the last-time values.
+ * name; the workout editor puts the last-time values there (gym mode shows them in `LastTimeBox` instead).
  */
 const props = defineProps<{
   /** Zero-based position in the workout; shown as 01, 02, ... */

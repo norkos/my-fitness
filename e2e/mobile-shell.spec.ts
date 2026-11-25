@@ -114,6 +114,22 @@ test.describe('phone (360px)', () => {
     }
   })
 
+  test('gym set grid headers and last-time box text is at least 12px', async ({ page }) => {
+    const { id } = await planOneExercise(page)
+    await page.goto(`/workouts/${id}/gym`)
+    await expect(page.getByTestId('gym-entry-last')).toBeVisible()
+    await expect(page.getByTestId('gym-set-header')).toHaveCount(1)
+    const sizes = await page.evaluate(() => {
+      const elements = [
+        ...document.querySelectorAll<HTMLElement>('[data-testid="gym-set-header"] > *'),
+        ...document.querySelectorAll<HTMLElement>('[data-testid="gym-entry-last"], [data-testid="gym-entry-last"] *'),
+      ].filter(el => [...el.childNodes].some(n => n.nodeType === Node.TEXT_NODE && n.textContent!.trim()))
+      return elements.map(el => ({ text: el.textContent?.trim(), px: Number.parseFloat(getComputedStyle(el).fontSize) }))
+    })
+    expect(sizes.length, 'text found').toBeGreaterThan(0)
+    for (const { text, px } of sizes) expect(px, `"${text}"`).toBeGreaterThanOrEqual(12)
+  })
+
   test('home tabs and workout card text is at least 12px', async ({ page }) => {
     const { exerciseId } = await planOneExercise(page)
     await createWorkout(page, { date: '2026-02-05', sessionType: 'solo', exercises: [{ exerciseId, sets: [{ weightKg: 40, reps: 8 }] }] })
