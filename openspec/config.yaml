@@ -23,13 +23,15 @@ rules:
   specs:
     - Scenarios use made-up English exercise names and values, never data from the user's real plans
   tasks:
-    - Each group carries its own tests and docs; verify with `npm run verify` (add `-- --e2e` for UI changes)
-    - End with an integration group that runs the full suite, including E2E
+    - Each group carries its own tests and docs; each task names the test files that verify it (unit, API or E2E), or `npm run verify` when no file fits
+    - End with an integration group that runs the diff-reviewer on the whole change and the full suite, `npm run verify -- --e2e` (a change touching only docs, config or specs may skip E2E and must say so in the task)
 
 operations:
   apply:
     guidance:
-      - After each task group, run the diff-reviewer sub-agent on that group's changes and fix blocking/important findings before continuing
+      - Run the diff-reviewer sub-agent on a task group's changes only when the group touches `server/`, `shared/` or `nuxt.config.ts`; fix blocking/important findings before continuing
+      - Run the diff-reviewer once on the whole change (`git diff main...HEAD` plus uncommitted changes) in the final integration group
+      - Before marking a group done, have the verifier sub-agent run only that group's targeted checks (the test files its tasks name, or `npm run verify` without E2E when none fit); the full `npm run verify -- --e2e` runs once, in the final integration group
       - Use the verifier sub-agent for checks instead of running test commands in the main conversation
       - Report progress in one or two lines per task group
   archive:

@@ -5,8 +5,11 @@ How a new feature goes from idea to merged code with Claude Code, OpenSpec, the 
 ```
  explore ──> propose ──> apply (per task group) ──> archive ──> ship
    │            │          │  implement                 │          │
-   │            │          ├─ diff-reviewer (Sonnet)    │          │
-   │            │          └─ verifier (Haiku)          │          │
+   │            │          ├─ verifier (Haiku)          │          │
+   │            │          ├─ diff-reviewer (Sonnet),   │          │
+   │            │          │  server/, shared/ groups   │          │
+   │            │          └─ final group: review all,  │          │
+   │            │             full suite incl. E2E      │          │
  /clear      /clear      /clear                      /clear     commit/PR
 ```
 
@@ -37,9 +40,11 @@ Review the files, ask for changes if needed, then run `/clear`.
 For each task group, Claude:
 
 1. implements the group;
-2. runs the **`diff-reviewer`** sub-agent (Sonnet) on the group's changes and fixes blocking or important findings;
-3. runs the **`verifier`** sub-agent (Haiku), which runs `npm run verify` (or `npm run verify -- --e2e` for UI changes) and reports only failures;
+2. runs the **`diff-reviewer`** sub-agent (Sonnet) on the group's changes, but only when the group touches `server/`, `shared/` or `nuxt.config.ts`, and fixes blocking or important findings;
+3. runs the **`verifier`** sub-agent (Haiku) on the group's targeted checks: the test files its tasks name, or `npm run verify` without E2E when none fit. It reports only failures;
 4. ticks the group's tasks in `tasks.md`.
+
+The last task group is the integration check: `diff-reviewer` reviews the whole change once (`git diff main...HEAD` plus uncommitted changes), and `verifier` runs the full suite with `npm run verify -- --e2e`.
 
 Steps 2 and 3 come from the apply guidance in `openspec/config.yaml`, so they happen without asking. Progress lives in `tasks.md`, so on a long change you can `/clear` between task groups and run `/opsx:apply` again.
 
